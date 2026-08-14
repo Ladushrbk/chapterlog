@@ -89,17 +89,6 @@ html[data-theme="midnight"] .btn.danger,html[data-theme="academia"] .btn.danger{
 .goal-ctl input{width:56px;padding:5px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 
 /* ---------- bookshelf ---------- */
-.shelf-wrap{background:linear-gradient(180deg,var(--bg2),var(--bg));border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px 8px;box-shadow:var(--shadow);margin-bottom:26px}
-.shelf{margin-bottom:26px}
-.books{display:flex;align-items:flex-end;gap:4px;min-height:190px;padding:0 10px;flex-wrap:wrap;row-gap:0}
-.spine{position:relative;border-radius:3px 3px 1px 1px;cursor:pointer;transition:transform .18s cubic-bezier(.34,1.4,.64,1),filter .18s;box-shadow:inset -3px 0 6px rgba(0,0,0,.28),inset 3px 0 4px rgba(255,255,255,.16),2px 3px 7px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
-.spine:hover{transform:translateY(-14px) rotate(-1.5deg);filter:brightness(1.12);z-index:5}
-.spine span{writing-mode:vertical-rl;text-orientation:mixed;font-family:var(--serif);font-size:11.5px;color:rgba(255,255,255,.94);text-shadow:0 1px 3px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;max-height:88%;letter-spacing:.3px;padding:6px 0}
-.spine::before{content:"";position:absolute;left:0;right:0;top:7px;height:1.5px;background:rgba(255,255,255,.3)}
-.spine::after{content:"";position:absolute;left:0;right:0;bottom:7px;height:1.5px;background:rgba(255,255,255,.3)}
-.board{height:14px;border-radius:3px;background:linear-gradient(180deg,var(--wood1),var(--wood2) 45%,var(--wood3));box-shadow:0 6px 14px -4px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.22);position:relative}
-.board::after{content:"";position:absolute;left:2%;right:2%;top:100%;height:9px;background:linear-gradient(180deg,rgba(0,0,0,.22),transparent);border-radius:0 0 8px 8px}
-.shelf-label{font-family:var(--serif);font-size:14px;color:var(--muted);margin:14px 0 6px;padding-left:10px}
 .empty{text-align:center;color:var(--muted);padding:44px 20px;font-family:var(--serif);font-size:15px}
 
 /* ---------- gallery ---------- */
@@ -113,10 +102,15 @@ html[data-theme="midnight"] .btn.danger,html[data-theme="academia"] .btn.danger{
 .cover .mark{position:absolute;top:7px;left:7px;font-size:14px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
 .cover .src{position:absolute;bottom:7px;left:7px;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:3px 8px;border-radius:99px;backdrop-filter:blur(6px);font-weight:600;letter-spacing:.2px}
 .card .meta2{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.spine .stype{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:9px;opacity:.85;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
 .card h4{font-family:var(--serif);font-size:14px;margin-top:9px;line-height:1.3}
 .card p{font-size:12px;color:var(--muted)}
 .card .rate{font-size:11px;margin-top:2px;letter-spacing:1px}
+
+/* ---------- stránkování ---------- */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 4px;padding-top:14px;border-top:1px solid var(--line)}
+.pager .cnt{font-size:12.5px;color:var(--muted)}
+.pager .pnav{display:flex;align-items:center;gap:6px}
+.pager button{min-width:34px}
 
 /* ---------- series ---------- */
 .sergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
@@ -358,18 +352,18 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       </div>
     </div>
 
-    <h2 class="sec">Moje police</h2>
-    <p class="sub">Klikni na hřbet a otevřeš detail knihy ✦</p>
-    <div class="chips" id="shelfChips"></div>
-    <div class="shelf-wrap" id="shelves"></div>
+    <div class="panels" id="dashPanels"></div>
   </section>
 
   <!-- GALLERY -->
   <section class="view" id="v-gallery">
     <h2 class="sec">Galerie</h2>
     <p class="sub">Všechny knihy i s obálkami ✦</p>
+    <div class="toolbar"><input class="search" id="qg" placeholder="🔍 Hledat název, autora, sérii…" oninput="resetPage('gal');renderGallery()"></div>
     <div class="chips" id="galChips"></div>
+    <div id="galPagerTop"></div>
     <div class="grid" id="gallery"></div>
+    <div id="galPager"></div>
   </section>
 
   <!-- SERIES -->
@@ -378,8 +372,8 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <p class="sub">Kolik dílů máš přečtených a co tě ještě čeká ✦</p>
     <div class="stats" id="serStats"></div>
     <div class="toolbar">
-      <input class="search" id="qs" placeholder="🔍 Hledat sérii…" oninput="renderSeries()">
-      <select class="btn" id="serSort" onchange="renderSeries()">
+      <input class="search" id="qs" placeholder="🔍 Hledat sérii…" oninput="resetPage('ser');renderSeries()">
+      <select class="btn" id="serSort" onchange="resetPage('ser');renderSeries()">
         <option value="progress">Nejdál rozečtené</option>
         <option value="name">Podle abecedy</option>
         <option value="left">Nejvíc zbývá</option>
@@ -387,6 +381,7 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       </select>
     </div>
     <div class="sergrid" id="seriesList"></div>
+    <div id="serPager"></div>
   </section>
 
   <!-- NAMES -->
@@ -395,14 +390,15 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <p class="sub">Která jména se v tvých knihách opakují nejčastěji ✦</p>
     <div class="stats" id="nameStats"></div>
     <div class="toolbar">
-      <input class="search" id="qn" placeholder="🔍 Hledat jméno…" oninput="renderNames()">
-      <select class="btn" id="nameSort" onchange="renderNames()">
+      <input class="search" id="qn" placeholder="🔍 Hledat jméno…" oninput="resetPage('name');renderNames()">
+      <select class="btn" id="nameSort" onchange="resetPage('name');renderNames()">
         <option value="count">Nejčastější</option>
         <option value="name">Podle abecedy</option>
         <option value="rating">Nejlíp hodnocené knihy</option>
       </select>
     </div>
     <div class="agrid" id="namesList"></div>
+    <div id="namePager"></div>
   </section>
 
   <!-- AUTHORS & SERIES -->
@@ -410,14 +406,14 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <h2 class="sec" id="grpTitle">Autoři</h2>
     <p class="sub" id="grpSub">Klikni na autora a uvidíš všechno, co od něj máš ✦</p>
     <div class="chips">
-      <button class="chip on" id="chipA" onclick="grpMode='authors';renderAuthors()">✍️ Autoři</button>
-      <button class="chip" id="chipT" onclick="grpMode='tags';renderAuthors()">🏷 Tropy</button>
-      <button class="chip" id="chipP" onclick="grpMode='pub';renderAuthors()">🏢 Nakladatelství</button>
+      <button class="chip on" id="chipA" onclick="grpMode='authors';resetPage('auth');renderAuthors()">✍️ Autoři</button>
+      <button class="chip" id="chipT" onclick="grpMode='tags';resetPage('auth');renderAuthors()">🏷 Tropy</button>
+      <button class="chip" id="chipP" onclick="grpMode='pub';resetPage('auth');renderAuthors()">🏢 Nakladatelství</button>
     </div>
     <div class="stats" id="grpStats"></div>
     <div class="toolbar">
-      <input class="search" id="qa" placeholder="🔍 Hledat…" oninput="renderAuthors()">
-      <select class="btn" id="aSort" onchange="renderAuthors()">
+      <input class="search" id="qa" placeholder="🔍 Hledat…" oninput="resetPage('auth');renderAuthors()">
+      <select class="btn" id="aSort" onchange="resetPage('auth');renderAuthors()">
         <option value="books">Nejvíc knih</option>
         <option value="read">Nejvíc přečteno</option>
         <option value="name">Podle abecedy</option>
@@ -426,6 +422,7 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       </select>
     </div>
     <div class="agrid" id="authors"></div>
+    <div id="authPager"></div>
   </section>
 
   <!-- TRACKER -->
@@ -433,15 +430,16 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <h2 class="sec">Tracker</h2>
     <p class="sub" id="trackerCount">—</p>
     <div class="toolbar">
-      <input class="search" id="q" placeholder="🔍 Hledat název, autora, sérii…" oninput="render()">
-      <select class="btn" id="fStatus" onchange="render()"></select>
-      <select class="btn" id="fGenre" onchange="render()"></select>
-      <select class="btn" id="fSource" onchange="render()"></select>
-      <select class="btn" id="fTag" onchange="render()"></select>
-      <select class="btn" id="fPub" onchange="render()"></select>
+      <input class="search" id="q" placeholder="🔍 Hledat název, autora, sérii…" oninput="resetPage('trk');render()">
+      <select class="btn" id="fStatus" onchange="resetPage('trk');render()"></select>
+      <select class="btn" id="fGenre" onchange="resetPage('trk');render()"></select>
+      <select class="btn" id="fSource" onchange="resetPage('trk');render()"></select>
+      <select class="btn" id="fTag" onchange="resetPage('trk');render()"></select>
+      <select class="btn" id="fPub" onchange="resetPage('trk');render()"></select>
       <button class="btn primary" onclick="openBook()">+ Přidat</button>
     </div>
     <div class="tbl-wrap"><table id="tbl"></table></div>
+    <div id="trkPager"></div>
   </section>
 
   <!-- TBR -->
@@ -464,7 +462,10 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       <div id="rouResult"></div>
     </div>
     <div class="stats" id="tbrStats"></div>
-    <div id="tbrGroups"></div>
+    <div class="toolbar"><input class="search" id="qt" placeholder="🔍 Hledat…" oninput="resetPage('tbr');renderTBR()"></div>
+    <div class="chips" id="tbrChips"></div>
+    <div class="grid" id="tbrGroups"></div>
+    <div id="tbrPager"></div>
   </section>
 
   <!-- WISHLIST -->
@@ -472,7 +473,9 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <h2 class="sec">Wishlist</h2>
     <p class="sub">Knihy, po kterých toužíš ✦</p>
     <div class="stats" id="wishStats"></div>
+    <div class="toolbar"><input class="search" id="qw" placeholder="🔍 Hledat…" oninput="resetPage('wish');renderWishlist()"></div>
     <div class="grid" id="wishlist"></div>
+    <div id="wishPager"></div>
   </section>
 
   <!-- BUDGET -->
@@ -504,12 +507,6 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
         <div class="f"><label>Měna</label><select id="sCur" onchange="setCur(this.value)">
           <option value="Kč">Kč — koruna</option><option value="€">€ — euro</option><option value="$">$ — dolar</option><option value="£">£ — libra</option><option value="zł">zł — złoty</option>
         </select></div>
-      </div>
-      <div class="panel">
-        <h3>🎨 Barvy hřbetů</h3>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Vytáhnu z každé obálky nejvýraznější barvu a obarvím podle ní hřbet na polici. Knihy s ručně nastavenou barvou nechám být.</p>
-        <button class="btn sm" onclick="colorsFromAllCovers()">🎨 Dopočítat barvy z obálek</button>
-        <p id="bulkMsg" style="font-size:12px;color:var(--muted);margin-top:10px"></p>
       </div>
       <div class="panel">
         <h3>🏷 Žánry</h3>
@@ -550,17 +547,18 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <div class="modal-hd"><h3 id="bookTitle">Nová kniha</h3><button class="x" onclick="close_('mBook')">✕</button></div>
     <div class="modal-bd">
       <div class="fields">
-        <div class="f"><label>Název *</label><input id="i_title"></div>
-        <div class="f"><label>Autor *</label><input id="i_author"></div>
+        <div class="f"><label>Název *</label><input id="i_title" oninput="checkDupe()"></div>
+        <div class="f"><label>Autor *</label><input id="i_author" list="authorList" oninput="checkDupe()"><datalist id="authorList"></datalist></div>
+        <div class="f wide" id="dupeWarn" style="display:none"></div>
         <div class="f"><label>Nakladatelství</label><input id="i_publisher" list="pubList" placeholder="Argo, Red…"><datalist id="pubList"></datalist></div>
         <div class="f"><label>Rok vydání</label><input id="i_year" type="number" min="0" max="2100" placeholder="2023"></div>
-        <div class="f wide"><label>Žánr</label><div class="genrepick" id="i_genres"></div></div>
+        <div class="f wide"><label>Žánr</label><div class="genrepick" id="i_genres"></div>
+          <div style="display:flex;gap:6px;margin-top:7px"><input id="newGenreInline" placeholder="Nový žánr…" style="flex:1;padding:7px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);font-size:13px" onkeydown="if(event.key==='Enter'){event.preventDefault();addGenreInline()}"><button type="button" class="btn sm" onclick="addGenreInline()">+</button></div></div>
         <div class="f wide"><label>Tropy a tagy</label><div class="genrepick" id="i_tags"></div>
           <div style="display:flex;gap:6px;margin-top:7px"><input id="newTag" placeholder="Vlastní tag…" style="flex:1;padding:7px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);font-size:13px" onkeydown="if(event.key==='Enter'){event.preventDefault();addTagInline()}"><button type="button" class="btn sm" onclick="addTagInline()">+</button></div></div>
         <div class="f"><label>Zdroj</label><select id="i_source" onchange="toggleDue()"></select></div>
         <div class="f"><label>Jazyk</label><select id="i_lang"></select></div>
         <div class="f"><label>Stav</label><select id="i_status"></select></div>
-        <div class="f"><label>Priorita (wishlist)</label><select id="i_priority"><option value="">—</option><option>🔥 Musím mít</option><option>⏳ Možná později</option><option>💭 Někdy</option></select></div>
         <div class="f"><label id="lblPages">Stran celkem</label><input id="i_pages" type="number" min="0"></div>
         <div class="f"><label id="lblPage">Aktuální strana</label><input id="i_page" type="number" min="0"></div>
         <div class="f"><label>Cena</label><input id="i_price" type="number" min="0" step="1"></div>
@@ -571,16 +569,6 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
         <div class="f"><label>Hodnocení</label><div class="stars" id="i_rating"></div></div>
         <div class="f"><label>Spice</label><div class="stars" id="i_spice"></div></div>
         <div class="f wide"><label>Odkaz na obálku</label><input id="i_cover" placeholder="https://…"></div>
-        <div class="f wide"><label>Barva hřbetu</label>
-          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-            <input type="color" id="i_colorPick" style="width:46px;height:36px;padding:2px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);cursor:pointer" oninput="syncColor('pick')">
-            <input id="i_color" placeholder="#8b6bb1" style="width:120px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);font-size:13.5px;font-family:ui-monospace,monospace" oninput="syncColor('text')">
-            <button type="button" class="btn sm" id="btnCover" onclick="colorFromCover()">🎨 Z obálky</button>
-            <button type="button" class="btn sm" onclick="clearColor()">Podle žánru</button>
-            <span id="colorPrev" style="width:26px;height:34px;border-radius:3px;box-shadow:inset -2px 0 4px rgba(0,0,0,.28),1px 2px 4px rgba(0,0,0,.25)"></span>
-          </div>
-          <span style="font-size:11.5px;color:var(--muted);margin-top:5px">Nech prázdné a barva se vezme podle žánru.</span>
-        </div>
         <div class="f wide"><label>Shrnutí</label><textarea id="i_summary"></textarea></div>
         <div class="f wide"><label>Moje recenze</label><textarea id="i_review"></textarea></div>
         <div class="f wide"><label>Oblíbená citace</label><textarea id="i_quote"></textarea></div>
@@ -639,10 +627,10 @@ const seed={
   {id:4,title:'Kirké',year:2018,publisher:'Bloomsbury',author:'Madeline Miller',genres:['Fiction','Fantasy'],source:'E-book',lang:'Angličtina',tags:['Retelling','Silná hrdinka'],status:'Přečteno',rating:4,spice:0,pages:400,page:400,price:229,start:'2025-12-01',finish:'2025-12-20',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9780316556347-L.jpg',summary:'Život čarodějky Kirké od dětství po vyhnanství.',review:'Pomalejší než Achilles, ale krásně napsané.',quote:'',chars:['Kirké','Telegonos'],notes:''},
   {id:5,title:'Dům duchů',year:1982,publisher:'Argo',author:'Isabel Allende',genres:['Fiction','Historický'],source:'Z knihovny',lang:'Čeština',tags:['Found family'],status:'K přečtení',rating:0,spice:0,pages:512,page:0,price:0,start:'',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9781501117015-L.jpg',summary:'Rodinná sága přes čtyři generace.',review:'',quote:'',chars:[],notes:'Půjčeno v městské knihovně'},
   {id:6,title:'Projekt Hail Mary',year:2021,publisher:'Audible Studios',author:'Andy Weir',genres:['Sci-Fi','Fiction'],source:'Audiokniha',lang:'Angličtina',tags:['Found family','Zvrat na konci'],status:'Přečteno',rating:5,spice:0,pages:970,page:970,price:0,start:'2026-03-10',finish:'2026-03-22',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9780593135204-L.jpg',summary:'Astronaut se probouzí sám na lodi bez paměti.',review:'Audio verze je fantastická.',quote:'',chars:['Ryland','Rocky'],notes:'Zdarma přes Audible'},
-  {id:7,title:'Dům země a krve',year:2020,publisher:'Bloomsbury',author:'Sarah J. Maas',genres:['Dark Romance','Romantasy'],source:'E-book',lang:'Angličtina',tags:['Slow burn','Morally grey','Found family'],status:'Wishlist',rating:0,spice:4,pages:752,page:0,price:349,start:'',finish:'',series:'Crescent City',num:1,priority:'🔥 Musím mít',cover:'https://covers.openlibrary.org/b/isbn/9781635574074-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Počkat na slevu'},
-  {id:8,title:'Sedm manželů Evelyn Hugo',year:2017,publisher:'Ikar',author:'Taylor Jenkins Reid',genres:['Fiction','Romance'],source:'Fyzická kniha',lang:'Čeština',tags:['Silná hrdinka','Zvrat na konci'],status:'Wishlist',rating:0,spice:2,pages:400,page:0,price:279,start:'',finish:'',series:'',num:0,priority:'⏳ Možná později',cover:'https://covers.openlibrary.org/b/isbn/9781501161933-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Všichni to doporučují'},
+  {id:7,title:'Dům země a krve',year:2020,publisher:'Bloomsbury',author:'Sarah J. Maas',genres:['Dark Romance','Romantasy'],source:'E-book',lang:'Angličtina',tags:['Slow burn','Morally grey','Found family'],status:'Wishlist',rating:0,spice:4,pages:752,page:0,price:349,start:'',finish:'',series:'Crescent City',num:1,cover:'https://covers.openlibrary.org/b/isbn/9781635574074-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Počkat na slevu'},
+  {id:8,title:'Sedm manželů Evelyn Hugo',year:2017,publisher:'Ikar',author:'Taylor Jenkins Reid',genres:['Fiction','Romance'],source:'Fyzická kniha',lang:'Čeština',tags:['Silná hrdinka','Zvrat na konci'],status:'Wishlist',rating:0,spice:2,pages:400,page:0,price:279,start:'',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9781501161933-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Všichni to doporučují'},
   {id:9,title:'Babel',year:2022,publisher:'Harper Voyager',author:'R. F. Kuang',genres:['Fantasy','Historický'],source:'Fyzická kniha',lang:'Angličtina',tags:['Found family','Otevřený konec'],status:'Čtu',rating:3,spice:0,pages:560,page:145,price:599,start:'2026-05-01',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9780063021426-L.jpg',summary:'Alternativní Oxford a magie překladu.',review:'Zatím moc akademické. Vrátím se k tomu.',quote:'',chars:[],notes:'Pauza od května'},
-  {id:10,title:'Normální lidi',year:2018,publisher:'Argo',author:'Sally Rooney',genres:['Fiction','Romance'],source:'E-book',lang:'Čeština',tags:['Second chance','Otevřený konec'],status:'Wishlist',rating:0,spice:2,pages:288,page:0,price:199,start:'',finish:'',series:'',num:0,priority:'💭 Někdy',cover:'https://covers.openlibrary.org/b/isbn/9781984822178-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Po seriálu'},
+  {id:10,title:'Normální lidi',year:2018,publisher:'Argo',author:'Sally Rooney',genres:['Fiction','Romance'],source:'E-book',lang:'Čeština',tags:['Second chance','Otevřený konec'],status:'Wishlist',rating:0,spice:2,pages:288,page:0,price:199,start:'',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9781984822178-L.jpg',summary:'',review:'',quote:'',chars:[],notes:'Po seriálu'},
   {id:11,title:'Zlodějka knih',year:2005,publisher:'Argo',author:'Markus Zusak',genres:['Fiction','Historický'],source:'Z knihovny',lang:'Čeština',tags:['Rozbrečelo mě','Found family'],status:'K přečtení',rating:0,spice:0,pages:584,page:0,price:0,start:'',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9780375842207-L.jpg',summary:'Vypráví Smrt. Německo za války.',review:'',quote:'',chars:[],notes:'Vrátit brzy!'},
   {id:12,title:'Pýcha a předsudek',year:1813,publisher:'Penguin Classics',author:'Jane Austen',genres:['Romance','Historický'],source:'E-book',lang:'Angličtina',tags:['Enemies to lovers','Slow burn','Grumpy × sunshine'],status:'K přečtení',rating:0,spice:0,pages:432,page:0,price:89,start:'',finish:'',series:'',num:0,cover:'https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg',summary:'Klasika, kterou pořád nemám přečtenou.',review:'',quote:'',chars:[],notes:''},
   {id:13,title:'Šeptající hlubina',year:2023,publisher:'Audible Studios',author:'Nicholas Binge',genres:['Thriller','Sci-Fi'],source:'Audiokniha',lang:'Angličtina',tags:['Zvrat na konci'],status:'K přečtení',rating:0,spice:0,pages:615,page:0,price:0,start:'',finish:'',series:'',num:0,cover:'',summary:'',review:'',quote:'',chars:[],notes:'Z Audible kreditu'}
@@ -650,7 +638,7 @@ const seed={
 };
 
 let db, editId=null, editSub=null, tab='library';
-let shelfFilter='all', galFilter='all', galSource='all', budgetYear='all', sortKey='title', sortDir=1, grpMode='authors';
+let galFilter='all', galSource='all', tbrSource='all', budgetYear='all', sortKey='title', sortDir=1, grpMode='authors';
 let formRating=0, formSpice=0, formGenres=[], formTags=[], formChars=[];
 
 /* ---------- storage ---------- */
@@ -662,6 +650,7 @@ function load(){
   db.settings=Object.assign({name:'',currency:'Kč',theme:'purple',goals:{},sheetUrl:'',autoSync:false,lastSync:''},db.settings||{});
   db.genres=db.genres&&db.genres.length?db.genres:Object.keys(GENRE_COLOR);
   db.tags=db.tags&&db.tags.length?db.tags:DEFAULT_TAGS.slice();
+  db.genreColors=db.genreColors||{};
   db.books=db.books||[];
   migrate();
   if(fresh)save(false);
@@ -679,9 +668,10 @@ function migrate(){
     if(!Array.isArray(b.chars)){b.chars=b.character?[String(b.character).trim()]:[];changed=true;}
     if(b.character!==undefined){delete b.character;changed=true;}
     if(b.due!==undefined){delete b.due;changed=true;}
-    if(b.color===undefined){b.color='';changed=true;}
+    if(b.color!==undefined){delete b.color;changed=true;}
     if(b.publisher===undefined){b.publisher='';changed=true;}
     if(b.year===undefined){b.year=0;changed=true;}
+    if(b.priority!==undefined){delete b.priority;changed=true;}
     if(b.fav!==undefined){delete b.fav;changed=true;}
     if(b.format!==undefined){delete b.format;changed=true;}
   });
@@ -695,10 +685,9 @@ const money=n=>Math.round(n||0).toLocaleString('cs-CZ')+' '+cur();
 const yearNow=()=>new Date().getFullYear();
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200);}
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const gcolor=g=>GENRE_COLOR[g]||PALETTE[(db.genres.indexOf(g)+7)%PALETTE.length];
-const isHex=v=>/^#[0-9a-fA-F]{6}$/.test(String(v||'').trim());
-/* barva hřbetu: vlastní, jinak podle prvního žánru */
-const bcolor=b=>isHex(b.color)?b.color.trim():gcolor((b.genres&&b.genres[0])||'Jiné');
+const gcolor=g=>(db.genreColors&&db.genreColors[g])||GENRE_COLOR[g]||PALETTE[(Math.max(0,db.genres.indexOf(g))+7)%PALETTE.length];
+/* barva pozadí obálky podle prvního žánru */
+const bcolor=b=>gcolor((b.genres&&b.genres[0])||'Jiné');
 
 /* ---------- derived ---------- */
 const finishedIn=y=>db.books.filter(b=>b.status==='Přečteno'&&b.finish&&(y==='all'||b.finish.slice(0,4)===String(y)));
@@ -706,7 +695,7 @@ const spentIn=y=>db.books.filter(b=>+b.price>0&&b.status!=='Wishlist'&&(y==='all
 const goalFor=y=>db.settings.goals[y]||30;
 
 /* ---------- nav ---------- */
-const TABS=[['library','🏠 Police'],['gallery','🖼 Galerie'],['tbr','📖 K přečtení'],['wishlist','✨ Wishlist'],['series','📖 Série'],['authors','✍️ Autoři'],['names','🧑 Jména'],['tracker','📚 Tracker'],['budget','💰 Rozpočet'],['settings','⚙️ Nastavení']];
+const TABS=[['library','🏠 Přehled'],['gallery','🖼 Galerie'],['tbr','📖 K přečtení'],['wishlist','✨ Wishlist'],['series','📖 Série'],['authors','✍️ Autoři'],['names','🧑 Jména'],['tracker','📚 Tracker'],['budget','💰 Rozpočet'],['settings','⚙️ Nastavení']];
 function buildNav(){
   document.getElementById('nav').innerHTML=TABS.map(([k,l])=>`<button data-t="${k}" class="${k===tab?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
 }
@@ -825,48 +814,79 @@ function renderLibrary(){
   if(!document.querySelector('#quoteBox .qbox'))renderQuotes();
   renderNowReading();
   const y=yearNow(), done=finishedIn(y).length, goal=goalFor(y);
-  const reading=db.books.filter(b=>b.status==='Čtu').length;
-  const owned=db.books.filter(b=>b.status!=='Wishlist').length;
-  const pages=finishedIn('all').filter(b=>!isAudio(b)).reduce((s,b)=>s+(+b.pages||0),0);
-  const mins=finishedIn('all').filter(isAudio).reduce((s,b)=>s+(+b.pages||0),0);
+  const all=db.books;
+  const read=all.filter(b=>b.status==='Přečteno');
+  const tbr=all.filter(b=>b.status==='K přečtení');
+  const wish=all.filter(b=>b.status==='Wishlist');
+  const reading=all.filter(b=>b.status==='Čtu');
+  const pages=read.filter(b=>!isAudio(b)).reduce((t,b)=>t+(+b.pages||0),0);
+  const mins=read.filter(isAudio).reduce((t,b)=>t+(+b.pages||0),0);
+
   document.getElementById('stats').innerHTML=[
-    [owned,'knih v knihovně'],[done,'přečteno letos'],[reading,'právě čtu'],[pages.toLocaleString('cs-CZ'),'přečtených stran'],[Math.round(mins/60)+' h','naposlouchaných']
+    [read.length,'přečteno celkem'],
+    [done,'přečteno letos'],
+    [reading.length,'právě čtu'],
+    [tbr.length,'čeká na přečtení'],
+    [wish.length,'ve wishlistu'],
+    [pages.toLocaleString('cs-CZ'),'přečtených stran'],
+    [Math.round(mins/60)+' h','naposlouchaných'],
+    [read.filter(b=>b.rating).length?(read.reduce((t,b)=>t+(b.rating||0),0)/read.filter(b=>b.rating).length).toFixed(1):'—','průměrné hodnocení']
   ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 
   const pct=goal?Math.min(100,Math.round(done/goal*100)):0;
   document.getElementById('ringArc').style.strokeDashoffset=220-(220*pct/100);
   document.getElementById('ringPct').textContent=pct+'%';
   document.getElementById('goalYear').textContent=y;
-  document.getElementById('goalTxt').textContent=`${done} z ${goal} knih${done>=goal?' — splněno! 🎉':''}`;
+  document.getElementById('goalTxt').textContent=`${done} z ${goal} knih${done>=goal?' — splněno! 🎉':` · zbývá ${goal-done}`}`;
   document.getElementById('goalIn').value=goal;
 
-  const filters=[['all','Vše'],['Přečteno','Přečteno'],['Čtu','Právě čtu'],['genre','Podle žánru']];
-  document.getElementById('shelfChips').innerHTML=filters.map(([k,l])=>`<button class="chip ${shelfFilter===k?'on':''}" onclick="shelfFilter='${k}';renderLibrary()">${l}</button>`).join('');
-
-  let shelves=[];
-  const owned_=db.books.filter(b=>b.status!=='Wishlist');
-  if(shelfFilter==='genre'){
-    const seen={};
-    owned_.forEach(b=>(b.genres&&b.genres.length?b.genres:['Jiné']).forEach(g=>{(seen[g]=seen[g]||[]).push(b)}));
-    shelves=Object.keys(seen).sort().map(g=>[g,seen[g]]);
-  } else {
-    let list=owned_;
-    if(shelfFilter==='Přečteno')list=owned_.filter(b=>b.status==='Přečteno');
-    if(shelfFilter==='Čtu')list=owned_.filter(b=>b.status==='Čtu');
-    shelves=chunk(list,14).map((c,i)=>[shelves.length&&i?'':'',c]);
-  }
-  const el=document.getElementById('shelves');
-  if(!shelves.length||!shelves.some(s=>s[1].length)){el.innerHTML='<div class="empty">Zatím tu nic není. Přidej první knihu ✦</div>';return;}
-  el.innerHTML=shelves.filter(s=>s[1].length).map(([label,list])=>`
-    ${label?`<div class="shelf-label">${esc(label)} · ${list.length}</div>`:''}
-    <div class="shelf"><div class="books">${list.map(spine).join('')}</div><div class="board"></div></div>`).join('');
+  document.getElementById('dashPanels').innerHTML=
+    panel('✍️ Nejčtenější autoři', rankList(count(read,b=>[b.author]),'knih',n=>openAuthor(n)))
+   +panel('🏷 Co nejvíc čtu', rankList(count(read,b=>b.genres||[]),'knih'))
+   +panel('⭐ Jak hodnotím', ratingBars(read))
+   +panel('⭐ Nejlíp hodnocení autoři', avgRank(all,b=>[b.author],'authors'))
+   +panel('⭐ Nejlíp hodnocené série', avgRank(all,b=>b.series?[b.series]:[],'series'))
+   +panel('⭐ Nejlíp hodnocené žánry', avgRank(all,b=>b.genres||[]));
 }
-function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o.length?o:[[]];}
-function spine(b){
-  const w=Math.max(24,Math.min(46,Math.round((+b.pages||300)/16)));
-  const h=Math.max(128,Math.min(178,120+Math.round((+b.pages||300)/12)));
-  const t=b.title.length>26?b.title.slice(0,25)+'…':b.title;
-  return `<div class="spine" style="width:${w}px;height:${h}px;background:linear-gradient(100deg,${bcolor(b)},${shade(bcolor(b),-22)})" onclick="showBook(${b.id})" title="${esc(b.title)} — ${esc(b.author)} (${esc(b.source||'')})"><span>${esc(t)}</span><span class="stype">${SRC_ICON[b.source]||''}</span></div>`;
+function panel(title,body){return `<div class="panel"><h3>${title}</h3>${body}</div>`;}
+function count(list,fn){
+  const m={};list.forEach(b=>fn(b).forEach(k=>{if(k)m[k]=(m[k]||0)+1}));
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+function byMonth(list){
+  const m={};list.forEach(b=>{const k=(b.finish||'').slice(0,7);if(k)m[k]=(m[k]||0)+1});return m;
+}
+function rankList(entries,unit,onClick){
+  if(!entries.length)return '<p style="color:var(--muted);font-size:13px">Zatím žádná data</p>';
+  const max=entries[0][1];
+  return entries.slice(0,6).map(([k,v],i)=>{
+    const c=gcolor(k)||PALETTE[i%PALETTE.length];
+    const click=onClick?`style="cursor:pointer" onclick="openAuthor('${esc(k).replace(/'/g,"\\'")}')"`:'';
+    return `<div class="hbar" ${click}><div class="top"><span>${SRC_ICON[k]||LANG_ICON[k]||''} ${esc(k)}</span><b>${v} ${unit}</b></div>
+      <div class="track"><i style="width:${v/max*100}%;background:${c}"></i></div></div>`;
+  }).join('');
+}
+/* průměrné hodnocení podle skupiny — bere jen ohodnocené knihy */
+function avgRank(list,fn,mode){
+  const m={};
+  list.forEach(b=>{if(!b.rating)return;fn(b).forEach(k=>{if(!k)return;(m[k]=m[k]||[]).push(b.rating)})});
+  const rows=Object.entries(m).map(([k,v])=>[k,v.reduce((a,c)=>a+c,0)/v.length,v.length])
+    .sort((a,b)=>b[1]-a[1]||b[2]-a[2]).slice(0,6);
+  if(!rows.length)return '<p style="color:var(--muted);font-size:13px">Zatím žádná hodnocení</p>';
+  return rows.map(([k,avg,n],i)=>{
+    const c=gcolor(k)||PALETTE[i%PALETTE.length];
+    const click=mode?`style="cursor:pointer" onclick="${mode==='authors'?'openAuthor':'openSeries'}('${esc(k).replace(/'/g,"\\'")}')"`:'';
+    return `<div class="hbar" ${click}><div class="top"><span>${esc(k)} <span style="opacity:.55">· ${n} ${n===1?'kniha':n<5?'knihy':'knih'}</span></span>
+      <b>${avg.toFixed(1)} ⭐</b></div>
+      <div class="track"><i style="width:${avg/5*100}%;background:${c}"></i></div></div>`;
+  }).join('');
+}
+function ratingBars(list){
+  const m={};list.forEach(b=>{if(b.rating)m[b.rating]=(m[b.rating]||0)+1});
+  const max=Math.max(1,...Object.values(m));
+  if(!Object.keys(m).length)return '<p style="color:var(--muted);font-size:13px">Zatím žádná hodnocení</p>';
+  return [5,4,3,2,1].map(r=>`<div class="hbar"><div class="top"><span>${'⭐'.repeat(r)}</span><b>${m[r]||0}</b></div>
+    <div class="track"><i style="width:${(m[r]||0)/max*100}%;background:${['#9a9a9a','#c2914b','#c98a9b','#6f9e8a','#6a9e6a'][r-1]}"></i></div></div>`).join('');
 }
 function shade(hex,p){
   const n=parseInt(hex.slice(1),16);let r=(n>>16)+p,g=((n>>8)&255)+p,b=(n&255)+p;
@@ -878,15 +898,20 @@ function shade(hex,p){
 function renderGallery(){
   const f=[['all','Vše'],['Přečteno','Přečteno'],['Čtu','Čtu'],['K přečtení','K přečtení'],['Wishlist','Wishlist'],];
   document.getElementById('galChips').innerHTML=
-    f.map(([k,l])=>`<button class="chip ${galFilter===k?'on':''}" onclick="galFilter='${k}';renderGallery()">${l}</button>`).join('')
+    f.map(([k,l])=>`<button class="chip ${galFilter===k?'on':''}" onclick="galFilter='${k}';resetPage('gal');renderGallery()">${l}</button>`).join('')
     +'<span style="width:1px;background:var(--line);margin:2px 6px"></span>'
     +[['all','Vše']].concat(SOURCES.map(x=>[x,SRC_ICON[x]+' '+x])).map(([k,l])=>
-      `<button class="chip ${galSource===k?'on':''}" onclick="galSource='${k}';renderGallery()">${l}</button>`).join('');
+      `<button class="chip ${galSource===k?'on':''}" onclick="galSource='${k}';resetPage('gal');renderGallery()">${l}</button>`).join('');
   let list=db.books.slice();
   if(galFilter!=='all')list=list.filter(b=>b.status===galFilter);
   if(galSource!=='all')list=list.filter(b=>b.source===galSource);
+  const qg=(document.getElementById('qg').value||'').toLowerCase();
+  if(qg)list=list.filter(b=>(b.title+' '+b.author+' '+(b.series||'')+' '+(b.publisher||'')).toLowerCase().includes(qg));
   list.sort((a,b)=>(b.finish||'').localeCompare(a.finish||'')||a.title.localeCompare(b.title,'cs'));
-  document.getElementById('gallery').innerHTML=list.length?list.map(cardHTML).join(''):'<div class="empty">Žádné knihy ✦</div>';
+  const pg=paginate(list,'gal');
+  document.getElementById('gallery').innerHTML=pg.slice.length?pg.slice.map(cardHTML).join(''):'<div class="empty">Nic nenalezeno ✦</div>';
+  document.getElementById('galPager').innerHTML=pg.pager;
+  document.getElementById('galPagerTop').innerHTML='';
 }
 const isAudio=b=>b.source==='Audiokniha';
 const unitOf=b=>isAudio(b)?'min':'stran';
@@ -951,8 +976,10 @@ function renderNames(){
     so==='rating'?b.st.avg-a.st.avg||b.st.total-a.st.total:
     b.st.total-a.st.total||a.name.localeCompare(b.name,'cs'));
 
-  document.getElementById('namesList').innerHTML=items.length
-    ?items.map(i=>groupCard(i,true,'names')).join('')
+  const pn=paginate(items,'name');
+  document.getElementById('namePager').innerHTML=pn.pager;
+  document.getElementById('namesList').innerHTML=pn.slice.length
+    ?pn.slice.map(i=>groupCard(i,true,'names')).join('')
     :'<div class="empty">Zatím žádná jména — vyplň u knihy pole Postavy ✦</div>';
 }
 function renderSeries(){
@@ -980,7 +1007,9 @@ function renderSeries(){
     so==='books'?b.total-a.total:
     (b.pct-a.pct)||b.st.total-a.st.total);
 
-  document.getElementById('seriesList').innerHTML=items.length?items.map(i=>{
+  const ps=paginate(items,'ser',12);
+  document.getElementById('serPager').innerHTML=ps.pager;
+  document.getElementById('seriesList').innerHTML=ps.slice.length?ps.slice.map(i=>{
     const first=i.list.slice().sort((a,b)=>(+a.num||99)-(+b.num||99))[0];
     const cov=i.list.slice().sort((a,b)=>(+a.num||99)-(+b.num||99)).find(b=>b.cover)||first;
     const gc=bcolor(cov);
@@ -1061,7 +1090,9 @@ function renderAuthors(){
     s==='spent'?b.st.spent-a.st.spent:
     b.st.total-a.st.total||a.name.localeCompare(b.name,'cs'));
 
-  document.getElementById('authors').innerHTML=items.length?items.map(i=>groupCard(i,isA||isT||isN||isP,grpMode)).join('')
+  const pa=paginate(items,'auth');
+  document.getElementById('authPager').innerHTML=pa.pager;
+  document.getElementById('authors').innerHTML=pa.slice.length?pa.slice.map(i=>groupCard(i,isA||isT||isN||isP,grpMode)).join('')
     :`<div class="empty">${isA?'Zatím žádní autoři':isT?'Zatím žádné tagy — přidej je u knihy':isP?'Zatím žádná nakladatelství — vyplň je u knihy':'Zatím žádné série'} ✦</div>`;
 }
 function seriesGaps(list){
@@ -1182,9 +1213,11 @@ function renderTracker(){
     return String(x||'').localeCompare(String(y||''),'cs')*sortDir;
   });
   document.getElementById('trackerCount').textContent=`${list.length} z ${db.books.length} knih`;
+  const pt=paginate(list,'trk',24);
   document.getElementById('tbl').innerHTML=`
     <thead><tr>${COLS.map(([k,l])=>`<th onclick="sortBy('${k}')">${l}${sortKey===k?(sortDir>0?' ▲':' ▼'):''}</th>`).join('')}<th></th></tr></thead>
-    <tbody>${list.length?list.map(rowHTML).join(''):`<tr><td colspan="14" style="text-align:center;padding:36px;color:var(--muted)">Nic nenalezeno</td></tr>`}</tbody>`;
+    <tbody>${pt.slice.length?pt.slice.map(rowHTML).join(''):`<tr><td colspan="14" style="text-align:center;padding:36px;color:var(--muted)">Nic nenalezeno</td></tr>`}</tbody>`;
+  document.getElementById('trkPager').innerHTML=pt.pager;
 }
 function sortBy(k){sortDir=sortKey===k?-sortDir:1;sortKey=k;renderTracker();}
 function rowHTML(b){
@@ -1225,22 +1258,27 @@ function renderTBR(){
     [Math.round(mins/60)+' h','audia před tebou']
   ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 
-  document.getElementById('tbrGroups').innerHTML=SOURCES.filter(s=>byS[s].length).map(s=>{
-    const bs=byS[s].slice().sort((a,b)=>a.title.localeCompare(b.title,'cs'));
-    return `<div class="srcgroup">
-      <div class="srchead"><div class="ic" style="background:${SRC_COLOR[s]}22">${SRC_ICON[s]}</div>
-        <div><h3>${s}</h3><span>${bs.length} ${bs.length===1?'kniha':bs.length<5?'knihy':'knih'} · ${s==='Audiokniha'?Math.round(bs.reduce((t,b)=>t+(+b.pages||0),0)/60)+' h':bs.reduce((t,b)=>t+(+b.pages||0),0).toLocaleString('cs-CZ')+' stran'}</span></div></div>
-      <div class="grid">${bs.map(b=>{
-        const gc=bcolor(b);
-        return `<div class="card" onclick="showBook(${b.id})">
-          <div class="cover" style="background:${gc}">
-            ${b.cover?`<img src="${esc(b.cover)}" loading="lazy" onerror="this.style.display='none'">`:`<div class="ph">${esc(b.title)}</div>`}
-            <span class="badge">${LANG_ICON[b.lang]||''} ${esc(b.lang||'')}</span>
-            ${srcBadge(b)}</div>
-          <h4>${esc(b.title)}</h4><p>${esc(b.author)}</p>
-          ${(b.tags||[]).length?`<p style="font-size:10.5px;color:var(--muted);margin-top:3px">${esc((b.tags||[]).slice(0,2).join(' · '))}</p>`:''}
-        </div>`}).join('')}</div></div>`;
-  }).join('')||'<div class="empty">Nic nečeká — buď jsi hrdinka, nebo je čas nakoupit ✦</div>';
+  document.getElementById('tbrChips').innerHTML=[['all','Vše']].concat(SOURCES.map(x=>[x,SRC_ICON[x]+' '+x]))
+    .map(([k,l])=>`<button class="chip ${tbrSource===k?'on':''}" onclick="tbrSource='${k}';resetPage('tbr');renderTBR()">${l}${k!=='all'&&byS[k]?` <span style="opacity:.6">${byS[k].length}</span>`:''}</button>`).join('');
+
+  let flat=tbrSource==='all'?list:byS[tbrSource]||[];
+  const qt=(document.getElementById('qt').value||'').toLowerCase();
+  if(qt)flat=flat.filter(b=>(b.title+' '+b.author+' '+(b.series||'')).toLowerCase().includes(qt));
+  flat=flat.slice().sort((a,b)=>a.title.localeCompare(b.title,'cs'));
+  const ptb=paginate(flat,'tbr');
+  document.getElementById('tbrPager').innerHTML=ptb.pager;
+  document.getElementById('tbrGroups').innerHTML=ptb.slice.length?ptb.slice.map(b=>{
+    const gc=bcolor(b);
+    return `<div class="card" onclick="showBook(${b.id})">
+      <div class="cover" style="background:${gc}">
+        ${b.cover?`<img src="${esc(b.cover)}" loading="lazy" onerror="this.style.display='none'">`:`<div class="ph">${esc(b.title)}</div>`}
+        <span class="badge">${LANG_ICON[b.lang]||''} ${esc(b.lang||'')}</span>
+        ${srcBadge(b)}</div>
+      <h4>${esc(b.title)}</h4><p>${esc(b.author)}</p>
+      ${metaLine(b)}
+      ${(b.tags||[]).length?`<p style="font-size:10.5px;color:var(--muted);margin-top:3px">${esc((b.tags||[]).slice(0,2).join(' · '))}</p>`:''}
+    </div>`;
+  }).join(''):'<div class="empty">Nic tu není ✦</div>';
 
   fill('rSource','Odkudkoli',SOURCES);
   fill('rGenre','Jakýkoli žánr',db.genres);
@@ -1287,23 +1325,27 @@ function startReading(id){
 /* ===== WISHLIST ===== */
 function renderWishlist(){
   const w=db.books.filter(b=>b.status==='Wishlist');
-  const total=w.reduce((s,b)=>s+(+b.price||0),0);
-  const must=w.filter(b=>b.priority&&b.priority.includes('Musím'));
+  const pages=w.filter(b=>!isAudio(b)).reduce((s,b)=>s+(+b.pages||0),0);
+  const mins=w.filter(isAudio).reduce((s,b)=>s+(+b.pages||0),0);
   document.getElementById('wishStats').innerHTML=[
-    [w.length,'knih ve wishlistu'],[money(total),'odhadovaná cena'],[must.length,'označeno „musím mít"'],[money(must.reduce((s,b)=>s+(+b.price||0),0)),'jen ty nutné']
+    [w.length,'knih ve wishlistu'],
+    [pages.toLocaleString('cs-CZ'),'stran mě čeká'],
+    [Math.round(mins/60)+' h','audia mě čeká'],
+    [Math.round(pages/50)||0,'dní čtení po 50 stranách']
   ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
-  const order={'🔥 Musím mít':0,'⏳ Možná později':1,'💭 Někdy':2};
-  w.sort((a,b)=>(order[a.priority]??3)-(order[b.priority]??3)||(+a.price||0)-(+b.price||0));
-  document.getElementById('wishlist').innerHTML=w.length?w.map(b=>{
+  w.sort((a,b)=>a.title.localeCompare(b.title,'cs'));
+  const qw=(document.getElementById('qw').value||'').toLowerCase();
+  const wf=qw?w.filter(b=>(b.title+' '+b.author+' '+(b.series||'')).toLowerCase().includes(qw)):w;
+  const pw=paginate(wf,'wish');
+  document.getElementById('wishPager').innerHTML=pw.pager;
+  document.getElementById('wishlist').innerHTML=pw.slice.length?pw.slice.map(b=>{
     const img=b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<div class="ph">${esc(b.title)}</div>`;
     return `<div class="card"><div class="cover" style="background:${bcolor(b)}" onclick="showBook(${b.id})">${img}
-      ${b.priority?`<span class="badge">${esc(b.priority)}</span>`:''}
       ${srcBadge(b)}</div>
       <h4>${esc(b.title)}</h4><p>${esc(b.author)}</p>
       ${metaLine(b)}
-      <p style="font-weight:600;color:var(--ink);margin-top:2px">${+b.price?money(b.price):''}</p>
-      <button class="btn sm" style="margin-top:7px;width:100%" onclick="buy(${b.id})">✓ Koupeno</button></div>`;
-  }).join(''):'<div class="empty">Wishlist je prázdný ✦</div>';
+      </div>`;
+  }).join(''):'<div class="empty">Nic tu není ✦</div>';
 }
 function buy(id){const b=db.books.find(x=>x.id===id);if(!b)return;b.status='Koupeno';save();render();toast('Přesunuto do knihovny ✦');}
 
@@ -1314,9 +1356,13 @@ function renderBudget(){
 
   const list=spentIn(budgetYear);
   const total=list.reduce((s,b)=>s+(+b.price||0),0);
-  const wish=db.books.filter(b=>b.status==='Wishlist').reduce((s,b)=>s+(+b.price||0),0);
+  const dearest=list.slice().sort((a,b)=>(+b.price||0)-(+a.price||0))[0];
+  const months=[...new Set(list.map(b=>(b.finish||b.start||'').slice(0,7)).filter(Boolean))].length||1;
   document.getElementById('budStats').innerHTML=[
-    [money(total),'utraceno za knihy'],[money(list.length?total/list.length:0),'průměr na knihu'],[list.length,'placených knih'],[money(wish),'potřeba na wishlist']
+    [money(total),'utraceno za knihy'],
+    [money(list.length?total/list.length:0),'průměr na knihu'],
+    [money(total/months),'průměrně za měsíc'],
+    [dearest?money(dearest.price):'—','nejdražší kniha']
   ].map(([n,l])=>`<div class="stat"><div class="n" style="font-size:23px">${n}</div><div class="l">${l}</div></div>`).join('');
 
   // genre donut
@@ -1372,14 +1418,29 @@ function renderSettings(){
   document.getElementById('sAuto').checked=!!db.settings.autoSync;
   if(db.settings.lastSync&&!document.getElementById('syncMsg').textContent)
     syncMsg('Naposledy synchronizováno '+new Date(db.settings.lastSync).toLocaleString('cs-CZ'));
-  document.getElementById('glist').innerHTML=db.genres.map(g=>
-    `<span class="gitem" style="background:${gcolor(g)}22;color:${gcolor(g)}">${esc(g)}<button onclick="delGenre('${esc(g).replace(/'/g,"\\'")}')">✕</button></span>`).join('');
+  document.getElementById('glist').innerHTML=db.genres.map(g=>{
+    const c=gcolor(g),k=esc(g).replace(/'/g,"\\'");
+    return `<span class="gitem" style="background:${c}22;color:${c}">
+      <input type="color" value="${c}" title="Změnit barvu" onchange="setGenreColor('${k}',this.value)"
+        style="width:17px;height:17px;padding:0;border:none;border-radius:50%;background:none;cursor:pointer">
+      ${esc(g)}
+      <button title="Smazat" onclick="delGenre('${k}')">✕</button></span>`;
+  }).join('')+`<button class="btn sm" style="margin-left:4px" onclick="resetGenreColors()">↺ Výchozí barvy</button>`;
 }
 function setTheme(t){db.settings.theme=t;save();render();}
 function setName(v){db.settings.name=v;save();document.getElementById('tagline').textContent=v?`Vítej zpět, ${v} ✦`:'Tvůj čtenářský život ✦';}
 function setCur(v){db.settings.currency=v;save();toast('Měna změněna');render();}
 function addGenre(){const i=document.getElementById('newGenre');const v=i.value.trim();if(!v)return;if(!db.genres.includes(v))db.genres.push(v);i.value='';save();renderSettings();}
-function delGenre(g){db.genres=db.genres.filter(x=>x!==g);save();renderSettings();}
+function setGenreColor(g,c){db.genreColors[g]=c;save();renderSettings();}
+function resetGenreColors(){db.genreColors={};save();renderSettings();toast('Barvy žánrů obnoveny');}
+function delGenre(g){
+  const used=db.books.filter(b=>(b.genres||[]).includes(g)).length;
+  if(used&&!confirm(`Žánr „${g}" má ${used} ${used===1?'knihu':used<5?'knihy':'knih'}. Smazat ho i z nich?`))return;
+  db.genres=db.genres.filter(x=>x!==g);
+  delete db.genreColors[g];
+  db.books.forEach(b=>{if((b.genres||[]).includes(g))b.genres=b.genres.filter(x=>x!==g)});
+  save();render();
+}
 function setGoal(v){db.settings.goals[yearNow()]=Math.max(1,+v||1);save();renderLibrary();}
 function bumpGoal(d){setGoal(goalFor(yearNow())+d);}
 
@@ -1395,24 +1456,46 @@ function openBook(id){
   set('title',b?.title);set('author',b?.author);set('publisher',b?.publisher);set('year',b?.year||'');set('source',b?.source||'Fyzická kniha');
   document.getElementById('pubList').innerHTML=[...new Set(db.books.map(x=>x.publisher).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option value="${esc(x)}">`).join('');
+  document.getElementById('authorList').innerHTML=[...new Set(db.books.map(x=>x.author).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option value="${esc(x)}">`).join('');
+  document.getElementById('dupeWarn').style.display='none';
   set('lang',b?.lang||'Čeština');set('status',b?.status||'K přečtení');
-  set('priority',b?.priority||'');set('pages',b?.pages);set('page',b?.page);set('price',b?.price);
+set('pages',b?.pages);set('page',b?.page);set('price',b?.price);
   set('start',b?.start);set('finish',b?.finish);set('series',b?.series);set('num',b?.num);
-  set('cover',b?.cover);set('color',b?.color);set('summary',b?.summary);set('review',b?.review);set('quote',b?.quote);
+  set('cover',b?.cover);set('summary',b?.summary);set('review',b?.review);set('quote',b?.quote);
   set('notes',b?.notes);
   formRating=b?.rating||0;formSpice=b?.spice||0;formGenres=b?.genres?b.genres.slice():[];
   formTags=b?.tags?b.tags.slice():[];
   formChars=b?.chars?b.chars.slice():[];
-  drawStars();drawGenrePick();drawTagPick();drawCharPick();toggleDue();syncColor('text');
+  drawStars();drawGenrePick();drawTagPick();drawCharPick();toggleDue();
   open_('mBook');
+}
+/* varuje, když už podobnou knihu v knihovně máš */
+const norm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+function findDupes(){
+  const ti=norm(document.getElementById('i_title').value), au=norm(document.getElementById('i_author').value);
+  if(ti.length<3)return [];
+  return db.books.filter(b=>b.id!==editId&&norm(b.title)===ti&&(!au||!norm(b.author)||norm(b.author)===au));
+}
+function checkDupe(){
+  const el=document.getElementById('dupeWarn'), hits=findDupes();
+  if(!hits.length){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML=`<div style="background:#f0ad4e22;border:1px solid #f0ad4e55;color:#a06a12;padding:11px 14px;border-radius:var(--radius-sm);font-size:13px">
+    ⚠️ <b>Tuhle knihu už v knihovně máš.</b><br>
+    ${hits.map(b=>`<span style="display:inline-block;margin-top:5px">„${esc(b.title)}" — ${esc(b.author)} · <span class="tag" style="background:${STATUS_COLOR[b.status]}22;color:${STATUS_COLOR[b.status]}">${esc(b.status)}</span>
+      <button type="button" class="btn sm" style="margin-left:6px" onclick="close_('mBook');showBook(${b.id})">Otevřít ji</button></span>`).join('<br>')}
+  </div>`;
 }
 function drawStars(){
   document.getElementById('i_rating').innerHTML=[1,2,3,4,5].map(n=>`<button class="${n<=formRating?'on':''}" onclick="formRating=formRating===${n}?0:${n};drawStars()">⭐</button>`).join('');
   document.getElementById('i_spice').innerHTML=[1,2,3,4,5].map(n=>`<button class="${n<=formSpice?'on':''}" onclick="formSpice=formSpice===${n}?0:${n};drawStars()">🌶</button>`).join('');
 }
 function drawGenrePick(){
-  document.getElementById('i_genres').innerHTML=db.genres.map(g=>
-    `<button class="${formGenres.includes(g)?'on':''}" onclick="toggleGenre('${esc(g).replace(/'/g,"\\'")}')">${esc(g)}</button>`).join('');
+  document.getElementById('i_genres').innerHTML=db.genres.map(g=>{
+    const on=formGenres.includes(g),c=gcolor(g);
+    return `<button type="button" class="${on?'on':''}" style="${on?`background:${c};border-color:${c};color:#fff`:`color:${c};border-color:${c}55`}" onclick="toggleGenre('${esc(g).replace(/'/g,"\\'")}')">${esc(g)}</button>`;
+  }).join('');
 }
 function drawTagPick(){
   document.getElementById('i_tags').innerHTML=db.tags.map(t=>
@@ -1439,101 +1522,32 @@ function addNameInline(){
   if(!formChars.includes(v))formChars.push(v);
   i.value='';drawCharPick();
 }
-/* ===== barva z obálky ===== */
-/* Čistá funkce nad pixely — snadno testovatelná. Vrací hex nebo null. */
-function pickDominant(data){
-  const buckets={};
-  for(let i=0;i<data.length;i+=4){
-    const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
-    if(a<200)continue;
-    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
-    if(mx>238&&mn>238)continue;   // skoro bílá — obvykle pozadí
-    if(mx<24)continue;            // skoro černá — obvykle text
-    const sat=mx?(mx-mn)/mx:0;
-    const wgt=0.25+sat;           // sytější odstíny mají větší váhu
-    const k=(r>>4)+'|'+(g>>4)+'|'+(b>>4);
-    const o=buckets[k]||(buckets[k]={w:0,r:0,g:0,b:0,n:0});
-    o.w+=wgt;o.r+=r;o.g+=g;o.b+=b;o.n++;
-  }
-  const list=Object.keys(buckets).map(k=>buckets[k]).sort((a,b)=>b.w-a.w);
-  if(!list.length)return null;
-  const best=list[0];
-  let r=Math.round(best.r/best.n),g=Math.round(best.g/best.n),b=Math.round(best.b/best.n);
-  // hřbet má bílý text — moc světlou barvu ztmavíme, ať je čitelný
-  const lum=(0.299*r+0.587*g+0.114*b)/255;
-  if(lum>0.58){const f=0.58/lum;r=Math.round(r*f);g=Math.round(g*f);b=Math.round(b*f);}
-  const hx=x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0');
-  return '#'+hx(r)+hx(g)+hx(b);
+function addGenreInline(){
+  const i=document.getElementById('newGenreInline'),v=i.value.trim();if(!v)return;
+  if(!db.genres.includes(v)){db.genres.push(v);save(false);}
+  if(!formGenres.includes(v))formGenres.push(v);
+  i.value='';drawGenrePick();
 }
-function dominantColor(url){
-  return new Promise((res,rej)=>{
-    if(!url)return rej(new Error('Kniha nemá odkaz na obálku'));
-    const img=new Image();
-    img.crossOrigin='anonymous';
-    img.onload=()=>{
-      try{
-        const W=64,H=Math.max(1,Math.round(W*(img.naturalHeight||96)/(img.naturalWidth||64)));
-        const c=document.createElement('canvas');c.width=W;c.height=H;
-        const ctx=c.getContext('2d');ctx.drawImage(img,0,0,W,H);
-        const hex=pickDominant(ctx.getImageData(0,0,W,H).data);
-        hex?res(hex):rej(new Error('Z obálky se nepodařilo vyčíst barvu'));
-      }catch(e){rej(new Error('Server obálky nedovolí přečíst obrázek (CORS)'));}
-    };
-    img.onerror=()=>rej(new Error('Obrázek se nepodařilo stáhnout'));
-    img.src=url;
-  });
-}
-async function colorFromCover(){
-  const url=document.getElementById('i_cover').value.trim();
-  const btn=document.getElementById('btnCover');
-  if(!url){toast('Nejdřív vlož odkaz na obálku');return;}
-  btn.textContent='…';btn.disabled=true;
-  try{
-    const hex=await dominantColor(url);
-    document.getElementById('i_color').value=hex;syncColor('text');
-    toast('Barva vzata z obálky ✦');
-  }catch(e){toast(e.message);}
-  btn.textContent='🎨 Z obálky';btn.disabled=false;
-}
-async function colorsFromAllCovers(){
-  const todo=db.books.filter(b=>b.cover&&!isHex(b.color));
-  if(!todo.length){toast('Není co dopočítat');return;}
-  const el=document.getElementById('bulkMsg');
-  let ok=0,bad=0;
-  for(let i=0;i<todo.length;i++){
-    el.textContent=`Zpracovávám ${i+1} z ${todo.length}…`;
-    try{todo[i].color=await dominantColor(todo[i].cover);ok++;}catch(e){bad++;}
-  }
-  save();render();
-  el.textContent=`Hotovo — ${ok} obálek se povedlo${bad?`, u ${bad} to nešlo (server nedovolil obrázek přečíst)`:''}.`;
-}
-function syncColor(from){
-  const txt=document.getElementById('i_color'), pick=document.getElementById('i_colorPick'), prev=document.getElementById('colorPrev');
-  if(from==='pick')txt.value=pick.value;
-  const v=txt.value.trim();
-  const eff=isHex(v)?v:gcolor(formGenres[0]||'Jiné');
-  if(isHex(v))pick.value=v;
-  prev.style.background=`linear-gradient(100deg,${eff},${shade(eff,-22)})`;
-  txt.style.borderColor=(v&&!isHex(v))?'#d9534f':'var(--line)';
-}
-function clearColor(){document.getElementById('i_color').value='';syncColor('text');}
+/* u audioknihy se místo stran zadávají minuty */
 function toggleDue(){
   const audio=document.getElementById('i_source').value==='Audiokniha';
   document.getElementById('lblPages').textContent=audio?'Délka celkem (min)':'Stran celkem';
   document.getElementById('lblPage').textContent=audio?'Kde jsem (min)':'Aktuální strana';
 }
-function toggleGenre(g){formGenres.includes(g)?formGenres=formGenres.filter(x=>x!==g):formGenres.push(g);drawGenrePick();syncColor('text');}
+function toggleGenre(g){formGenres.includes(g)?formGenres=formGenres.filter(x=>x!==g):formGenres.push(g);drawGenrePick();}
 function saveBook(){
   const g=k=>document.getElementById('i_'+k).value.trim();
   if(!g('title')||!g('author')){toast('Vyplň název a autora');return;}
+  const dupes=findDupes();
+  if(dupes.length&&!confirm(`„${dupes[0].title}" už v knihovně máš (${dupes[0].status}). Přidat i tak?`))return;
   const rec={
     id:editId??(Date.now()),title:g('title'),author:g('author'),publisher:g('publisher'),year:+g('year')||0,genres:formGenres.slice(),
     source:g('source'),lang:g('lang'),
-    tags:formTags.slice(),status:g('status'),priority:g('priority'),
+    tags:formTags.slice(),status:g('status'),
     rating:formRating,spice:formSpice,
     pages:+g('pages')||0,page:+g('page')||0,price:+g('price')||0,
     start:g('start'),finish:g('finish'),series:g('series'),num:+g('num')||0,
-    cover:g('cover'),color:isHex(g('color'))?g('color').trim():'',summary:g('summary'),review:g('review'),quote:g('quote'),
+    cover:g('cover'),summary:g('summary'),review:g('review'),quote:g('quote'),
     chars:formChars.slice(),notes:g('notes')
   };
   if(rec.status==='Přečteno'&&!rec.finish)rec.finish=new Date().toISOString().slice(0,10);
@@ -1717,6 +1731,37 @@ function wipe(){
   if(!confirm('Určitě? Doporučuju si nejdřív stáhnout zálohu.'))return;
   localStorage.removeItem(KEY);db=clone(seed);db.books=[];save();render();toast('Vymazáno');
 }
+
+/* ===== stránkování ===== */
+const PAGE={};
+function pageState(key,def){return PAGE[key]=PAGE[key]||{p:0,size:def||24};}
+function paginate(list,key,def){
+  const st=pageState(key,def);
+  const total=list.length;
+  const pages=st.size==='all'?1:Math.max(1,Math.ceil(total/st.size));
+  if(st.p>pages-1)st.p=pages-1;
+  if(st.p<0)st.p=0;
+  const from=st.size==='all'?0:st.p*st.size;
+  const slice=st.size==='all'?list:list.slice(from,from+st.size);
+  return {slice,pager:pagerHTML(key,st,total,pages,from,slice.length)};
+}
+function pagerHTML(key,st,total,pages,from,shown){
+  if(!total)return '';
+  const nav=pages>1?`
+    <button class="btn sm" ${st.p===0?'disabled style="opacity:.4"':''} onclick="goPage('${key}',${st.p-1})">‹</button>
+    <span style="font-size:12.5px;color:var(--muted);padding:0 4px">${st.p+1} / ${pages}</span>
+    <button class="btn sm" ${st.p>=pages-1?'disabled style="opacity:.4"':''} onclick="goPage('${key}',${st.p+1})">›</button>`:'';
+  return `<div class="pager">
+    <span class="cnt">${total?`${from+1}–${from+shown} z ${total}`:''}</span>
+    <div class="pnav">${nav}
+      <select class="btn sm" onchange="setPageSize('${key}',this.value)">
+        ${[12,24,48,96].map(n=>`<option value="${n}" ${st.size==n?'selected':''}>${n} na stránku</option>`).join('')}
+        <option value="all" ${st.size==='all'?'selected':''}>Vše</option>
+      </select></div></div>`;
+}
+function goPage(key,p){pageState(key).p=p;render();window.scrollTo({top:document.querySelector('.view.on').offsetTop-90,behavior:'smooth'});}
+function setPageSize(key,v){const st=pageState(key);st.size=v==='all'?'all':+v;st.p=0;render();}
+function resetPage(key){pageState(key).p=0;}
 
 /* ===== helpers ===== */
 function open_(id){document.getElementById(id).classList.add('on');document.body.style.overflow='hidden';}
