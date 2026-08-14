@@ -106,6 +106,19 @@ html[data-theme="midnight"] .btn.danger,html[data-theme="academia"] .btn.danger{
 .card p{font-size:12px;color:var(--muted)}
 .card .rate{font-size:11px;margin-top:2px;letter-spacing:1px}
 
+/* ---------- vyhledání knihy ---------- */
+.lookup{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px}
+.lkrow{display:flex;gap:8px}
+.lkrow input{flex:1;padding:9px 13px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:13.5px}
+.lkrow input:focus{outline:none;border-color:var(--accent)}
+.lkitem{display:flex;gap:11px;align-items:flex-start;padding:10px;border-radius:var(--radius-sm);cursor:pointer;transition:.14s;margin-top:8px;background:var(--panel);border:1px solid transparent}
+.lkitem:hover{border-color:var(--accent2);transform:translateX(2px)}
+.lkitem img{width:38px;height:56px;object-fit:cover;border-radius:4px;flex:0 0 auto;box-shadow:var(--shadow)}
+.lkitem .ph2{width:38px;height:56px;border-radius:4px;flex:0 0 auto;background:var(--accent2)}
+.lkitem h5{font-family:var(--serif);font-size:14px;line-height:1.25}
+.lkitem p{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lkmsg{font-size:12.5px;color:var(--muted);margin-top:9px}
+
 /* ---------- stránkování ---------- */
 .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 4px;padding-top:14px;border-top:1px solid var(--line)}
 .pager .cnt{font-size:12.5px;color:var(--muted)}
@@ -436,6 +449,7 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       <select class="btn" id="fSource" onchange="resetPage('trk');render()"></select>
       <select class="btn" id="fTag" onchange="resetPage('trk');render()"></select>
       <select class="btn" id="fPub" onchange="resetPage('trk');render()"></select>
+      <button class="chip" id="fNoDate" onclick="noDate=!noDate;resetPage('trk');render()">📅 Bez data</button>
       <button class="btn primary" onclick="openBook()">+ Přidat</button>
     </div>
     <div class="tbl-wrap"><table id="tbl"></table></div>
@@ -546,6 +560,13 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
   <div class="modal">
     <div class="modal-hd"><h3 id="bookTitle">Nová kniha</h3><button class="x" onclick="close_('mBook')">✕</button></div>
     <div class="modal-bd">
+      <div class="lookup">
+        <div class="lkrow">
+          <input id="lkq" placeholder="🔍 Najdi knihu podle názvu, autora nebo ISBN…" onkeydown="if(event.key==='Enter'){event.preventDefault();lookup()}">
+          <button type="button" class="btn primary sm" id="lkbtn" onclick="lookup()">Vyhledat</button>
+        </div>
+        <div id="lkres"></div>
+      </div>
       <div class="fields">
         <div class="f"><label>Název *</label><input id="i_title" oninput="checkDupe()"></div>
         <div class="f"><label>Autor *</label><input id="i_author" list="authorList" oninput="checkDupe()"><datalist id="authorList"></datalist></div>
@@ -563,9 +584,11 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
         <div class="f"><label id="lblPage">Aktuální strana</label><input id="i_page" type="number" min="0"></div>
         <div class="f"><label>Cena</label><input id="i_price" type="number" min="0" step="1"></div>
         <div class="f"><label>Začato</label><input id="i_start" type="date"></div>
-        <div class="f"><label>Dokončeno</label><input id="i_finish" type="date"></div>
-        <div class="f"><label>Série</label><input id="i_series"></div>
+        <div class="f"><label>Dokončeno</label><input id="i_finish" type="date">
+          <span style="font-size:11.5px;color:var(--muted)">Nech prázdné u knih, které jsi četla dávno — nezapočítají se pak do letošního cíle.</span></div>
+        <div class="f"><label>Série</label><input id="i_series" list="seriesList" oninput="onSeries()"><datalist id="seriesList"></datalist></div>
         <div class="f"><label>Díl č.</label><input id="i_num" type="number" min="0"></div>
+        <div class="f wide"><span id="seriesHint" style="font-size:12px;color:var(--muted)"></span></div>
         <div class="f"><label>Hodnocení</label><div class="stars" id="i_rating"></div></div>
         <div class="f"><label>Spice</label><div class="stars" id="i_spice"></div></div>
         <div class="f wide"><label>Odkaz na obálku</label><input id="i_cover" placeholder="https://…"></div>
@@ -638,7 +661,7 @@ const seed={
 };
 
 let db, editId=null, editSub=null, tab='library';
-let galFilter='all', galSource='all', tbrSource='all', budgetYear='all', sortKey='title', sortDir=1, grpMode='authors';
+let galFilter='all', galSource='all', tbrSource='all', noDate=false, budgetYear='all', sortKey='title', sortDir=1, grpMode='authors';
 let formRating=0, formSpice=0, formGenres=[], formTags=[], formChars=[];
 
 /* ---------- storage ---------- */
@@ -1196,6 +1219,7 @@ function renderTracker(){
   const pv=fp.value;
   fp.innerHTML='<option value="">Všechna nakladatelství</option>'+[...new Set(db.books.map(x=>x.publisher).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option>${esc(x)}</option>`).join('');
   if(pv)fp.value=pv;
+  document.getElementById('fNoDate').classList.toggle('on',noDate);
   const q=(document.getElementById('q').value||'').toLowerCase();
   let list=db.books.filter(b=>{
     if(fs.value&&b.status!==fs.value)return false;
@@ -1203,6 +1227,7 @@ function renderTracker(){
     if(fsrc.value&&b.source!==fsrc.value)return false;
     if(ft.value&&!(b.tags||[]).includes(ft.value))return false;
     if(fp.value&&b.publisher!==fp.value)return false;
+    if(noDate&&(b.finish||b.status!=='Přečteno'))return false;
     if(q&&!((b.title+' '+b.author+' '+(b.series||'')+' '+(b.publisher||'')).toLowerCase().includes(q)))return false;
     return true;
   });
@@ -1458,6 +1483,9 @@ function openBook(id){
     .sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option value="${esc(x)}">`).join('');
   document.getElementById('authorList').innerHTML=[...new Set(db.books.map(x=>x.author).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option value="${esc(x)}">`).join('');
+  document.getElementById('seriesList').innerHTML=[...new Set(db.books.map(x=>x.series).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'cs')).map(x=>`<option value="${esc(x)}">`).join('');
+  document.getElementById('seriesHint').textContent='';
   document.getElementById('dupeWarn').style.display='none';
   set('lang',b?.lang||'Čeština');set('status',b?.status||'K přečtení');
 set('pages',b?.pages);set('page',b?.page);set('price',b?.price);
@@ -1468,6 +1496,7 @@ set('pages',b?.pages);set('page',b?.page);set('price',b?.price);
   formTags=b?.tags?b.tags.slice():[];
   formChars=b?.chars?b.chars.slice():[];
   drawStars();drawGenrePick();drawTagPick();drawCharPick();toggleDue();
+  if(b?.series)onSeries();
   open_('mBook');
 }
 /* varuje, když už podobnou knihu v knihovně máš */
@@ -1475,7 +1504,16 @@ const norm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u03
 function findDupes(){
   const ti=norm(document.getElementById('i_title').value), au=norm(document.getElementById('i_author').value);
   if(ti.length<3)return [];
-  return db.books.filter(b=>b.id!==editId&&norm(b.title)===ti&&(!au||!norm(b.author)||norm(b.author)===au));
+  return db.books.filter(b=>{
+    if(b.id===editId)return false;
+    const bt=norm(b.title), ba=norm(b.author);
+    const sameAuthor=!au||!ba||ba===au;
+    if(!sameAuthor)return false;
+    if(bt===ti)return true;
+    // „Čtvrtá křídla" vs „Čtvrtá křídla: Empyrean 1" — stejný autor, jeden název je začátkem druhého
+    const short=bt.length<ti.length?bt:ti, long=bt.length<ti.length?ti:bt;
+    return au&&ba&&short.length>=6&&long.startsWith(short);
+  });
 }
 function checkDupe(){
   const el=document.getElementById('dupeWarn'), hits=findDupes();
@@ -1528,6 +1566,23 @@ function addGenreInline(){
   if(!formGenres.includes(v))formGenres.push(v);
   i.value='';drawGenrePick();
 }
+/* při výběru série napoví, co už z ní máš, a předvyplní další díl */
+function onSeries(){
+  const name=document.getElementById('i_series').value.trim();
+  const hint=document.getElementById('seriesHint'), numEl=document.getElementById('i_num');
+  if(!name){hint.textContent='';return;}
+  const have=db.books.filter(b=>b.id!==editId&&(b.series||'').trim().toLowerCase()===name.toLowerCase());
+  if(!have.length){hint.textContent='Nová série — tuhle zakládáš.';return;}
+  const nums=have.map(b=>+b.num).filter(n=>n>0).sort((a,b)=>a-b);
+  const max=nums.length?Math.max(...nums):0;
+  const missing=[];for(let i=1;i<max;i++)if(!nums.includes(i))missing.push(i);
+  const read=have.filter(b=>b.status==='Přečteno').length;
+  hint.innerHTML=`📖 <b>${esc(name)}</b> — máš ${have.length} ${have.length===1?'díl':have.length<5?'díly':'dílů'}`
+    +(nums.length?` (${nums.map(n=>'#'+n).join(', ')})`:'')
+    +` · ${read} přečteno`
+    +(missing.length?` · <span style="color:#c0392b">chybí #${missing.join(', #')}</span>`:'');
+  if(!numEl.value||numEl.value==='0')numEl.value=max+1;
+}
 /* u audioknihy se místo stran zadávají minuty */
 function toggleDue(){
   const audio=document.getElementById('i_source').value==='Audiokniha';
@@ -1550,7 +1605,8 @@ function saveBook(){
     cover:g('cover'),summary:g('summary'),review:g('review'),quote:g('quote'),
     chars:formChars.slice(),notes:g('notes')
   };
-  if(rec.status==='Přečteno'&&!rec.finish)rec.finish=new Date().toISOString().slice(0,10);
+  /* datum dokončení nedosazujeme — prázdné znamená „přečteno kdysi dávno"
+     a taková kniha se pak nepočítá do letošního cíle */
   if(rec.status==='Přečteno'&&rec.pages)rec.page=rec.pages;
   if(editId){const i=db.books.findIndex(x=>x.id===editId);db.books[i]=rec;}else db.books.push(rec);
   save();close_('mBook');renderQuotes();render();toast(editId?'Uloženo ✦':'Kniha přidána ✦');
@@ -1730,6 +1786,66 @@ function wipe(){
   if(!confirm('Opravdu smazat všechny knihy, wishlist i nastavení? Nejde vzít zpět.'))return;
   if(!confirm('Určitě? Doporučuju si nejdřív stáhnout zálohu.'))return;
   localStorage.removeItem(KEY);db=clone(seed);db.books=[];save();render();toast('Vymazáno');
+}
+
+/* ===== vyhledání knihy v Google Books ===== */
+const LANG_MAP={cs:'Čeština',en:'Angličtina',sk:'Jiný',de:'Jiný',pl:'Jiný'};
+/* Čistá funkce: převede odpověď Google Books na naši knihu. Testovatelná bez sítě. */
+function mapVolume(v){
+  if(!v)return null;
+  const img=(v.imageLinks||{});
+  let cover=img.thumbnail||img.smallThumbnail||'';
+  if(cover)cover=cover.replace(/^http:/,'https:').replace(/&edge=curl/,'');
+  const year=(v.publishedDate||'').slice(0,4);
+  return {
+    title:v.title?(v.subtitle?`${v.title}: ${v.subtitle}`:v.title):'',
+    author:(v.authors||[]).join(', '),
+    publisher:v.publisher||'',
+    year:/^\d{4}$/.test(year)?+year:0,
+    pages:+v.pageCount||0,
+    lang:LANG_MAP[v.language]||(v.language?'Jiný':''),
+    cover,
+    summary:(v.description||'').replace(/<[^>]*>/g,'').slice(0,600),
+    categories:v.categories||[]
+  };
+}
+function lookupUrl(q){
+  const t=q.trim();
+  const isbn=t.replace(/[-\s]/g,'');
+  const query=/^\d{10}(\d{3})?$/.test(isbn)?'isbn:'+isbn:t;
+  return 'https://www.googleapis.com/books/v1/volumes?maxResults=6&q='+encodeURIComponent(query);
+}
+let lkHits=[];
+async function lookup(){
+  const q=document.getElementById('lkq').value.trim();
+  const res=document.getElementById('lkres'), btn=document.getElementById('lkbtn');
+  if(q.length<2){res.innerHTML='<div class="lkmsg">Napiš aspoň dvě písmena.</div>';return;}
+  btn.disabled=true;btn.textContent='…';
+  res.innerHTML='<div class="lkmsg">Hledám…</div>';
+  try{
+    const r=await fetch(lookupUrl(q));
+    const d=await r.json();
+    lkHits=(d.items||[]).map(it=>mapVolume(it.volumeInfo)).filter(b=>b&&b.title);
+    if(!lkHits.length){res.innerHTML='<div class="lkmsg">Nic jsem nenašel. Zkus jiný název nebo vyplň knihu ručně.</div>';}
+    else res.innerHTML=lkHits.map((b,i)=>`<div class="lkitem" onclick="useHit(${i})">
+      ${b.cover?`<img src="${esc(b.cover)}" loading="lazy" onerror="this.style.display='none'">`:'<div class="ph2"></div>'}
+      <div style="flex:1;min-width:0">
+        <h5>${esc(b.title)}</h5>
+        <p>${esc(b.author||'neznámý autor')}${b.year?` · ${b.year}`:''}${b.publisher?` · ${esc(b.publisher)}`:''}${b.pages?` · ${b.pages} s.`:''}</p>
+      </div></div>`).join('')+'<div class="lkmsg">Klikni na knihu a vyplní se formulář. Zdroj: Google Books.</div>';
+  }catch(e){
+    res.innerHTML='<div class="lkmsg" style="color:#c0392b">Vyhledávání se nepodařilo — zkontroluj připojení k internetu.</div>';
+  }
+  btn.disabled=false;btn.textContent='Vyhledat';
+}
+function useHit(i){
+  const b=lkHits[i];if(!b)return;
+  const set=(k,v)=>{if(v!==''&&v!==0&&v!=null)document.getElementById('i_'+k).value=v;};
+  set('title',b.title);set('author',b.author);set('publisher',b.publisher);
+  set('year',b.year);set('pages',b.pages);set('cover',b.cover);set('summary',b.summary);
+  if(b.lang)document.getElementById('i_lang').value=b.lang;
+  checkDupe();onSeries();
+  document.getElementById('lkres').innerHTML='<div class="lkmsg">✓ Vyplněno. Zkontroluj údaje a doplň žánr, stav a hodnocení.</div>';
 }
 
 /* ===== stránkování ===== */
