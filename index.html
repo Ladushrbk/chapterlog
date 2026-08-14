@@ -523,6 +523,19 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
         </select></div>
       </div>
       <div class="panel">
+        <h3>🔎 Vyhledávání knih</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Knihy se hledají v <b>Open Library</b> — funguje rovnou a nic nastavovat nemusíš.
+          Google Books má lepší údaje o českých vydáních, ale od roku 2025 vyžaduje vlastní API klíč (zdarma, 1000 dotazů denně).</p>
+        <div class="f"><label>Google Books API klíč (nepovinné)</label><input id="sGbKey" placeholder="AIza…" oninput="setGbKey(this.value)"></div>
+        <p style="font-size:11.5px;color:var(--muted);margin-top:8px">Klíč získáš na <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">console.cloud.google.com</a> → Create credentials → API key, a povolíš u něj Books API.</p>
+      </div>
+      <div class="panel">
+        <h3>🩺 Diagnostika připojení</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Když nefunguje vyhledávání knih nebo sync se sheetem, spusť tohle a pošli mi výsledek.</p>
+        <button class="btn sm" onclick="diag()">🩺 Otestovat připojení</button>
+        <pre id="diagOut" style="font-size:11.5px;color:var(--muted);margin-top:10px;white-space:pre-wrap;font-family:ui-monospace,monospace"></pre>
+      </div>
+      <div class="panel">
         <h3>🏷 Žánry</h3>
         <div class="glist" id="glist" style="margin-bottom:12px"></div>
         <div style="display:flex;gap:7px"><input class="search" id="newGenre" placeholder="Nový žánr…" style="flex:1"><button class="btn sm" onclick="addGenre()">Přidat</button></div>
@@ -670,7 +683,7 @@ function load(){
   let fresh=false;
   try{const r=localStorage.getItem(KEY); if(r){db=JSON.parse(r);}else{db=clone(seed);fresh=true;}}
   catch(e){db=clone(seed);fresh=true;}
-  db.settings=Object.assign({name:'',currency:'Kč',theme:'purple',goals:{},sheetUrl:'',autoSync:false,lastSync:''},db.settings||{});
+  db.settings=Object.assign({name:'',currency:'Kč',theme:'purple',goals:{},sheetUrl:'',autoSync:false,lastSync:'',gbKey:''},db.settings||{});
   db.genres=db.genres&&db.genres.length?db.genres:Object.keys(GENRE_COLOR);
   db.tags=db.tags&&db.tags.length?db.tags:DEFAULT_TAGS.slice();
   db.genreColors=db.genreColors||{};
@@ -1440,6 +1453,7 @@ function renderSettings(){
   document.getElementById('sName').value=db.settings.name||'';
   document.getElementById('sCur').value=cur();
   document.getElementById('sSheet').value=db.settings.sheetUrl||'';
+  document.getElementById('sGbKey').value=db.settings.gbKey||'';
   document.getElementById('sAuto').checked=!!db.settings.autoSync;
   if(db.settings.lastSync&&!document.getElementById('syncMsg').textContent)
     syncMsg('Naposledy synchronizováno '+new Date(db.settings.lastSync).toLocaleString('cs-CZ'));
@@ -1453,6 +1467,7 @@ function renderSettings(){
   }).join('')+`<button class="btn sm" style="margin-left:4px" onclick="resetGenreColors()">↺ Výchozí barvy</button>`;
 }
 function setTheme(t){db.settings.theme=t;save();render();}
+function setGbKey(v){db.settings.gbKey=v.trim();save(false);}
 function setName(v){db.settings.name=v;save();document.getElementById('tagline').textContent=v?`Vítej zpět, ${v} ✦`:'Tvůj čtenářský život ✦';}
 function setCur(v){db.settings.currency=v;save();toast('Měna změněna');render();}
 function addGenre(){const i=document.getElementById('newGenre');const v=i.value.trim();if(!v)return;if(!db.genres.includes(v))db.genres.push(v);i.value='';save();renderSettings();}
@@ -1672,7 +1687,7 @@ function jsonp(url,ms){
     const t=setTimeout(()=>{done();rej(new Error('Server neodpověděl do 20 s'))},ms||20000);
     function done(){clearTimeout(t);try{delete window[cb]}catch(e){window[cb]=undefined}if(s.parentNode)s.parentNode.removeChild(s);}
     window[cb]=d=>{done();res(d)};
-    s.onerror=()=>{done();rej(new Error('Google odpověď nepustil — zkontroluj, že u nasazení je „Kdo má přístup: Kdokoli"'))};
+    s.onerror=()=>{done();rej(new Error('server odpověď nepustil'))};
     s.src=url+(url.indexOf('?')>-1?'&':'?')+'callback='+cb+'&t='+Date.now();
     document.body.appendChild(s);
   });
@@ -1737,7 +1752,7 @@ async function sheetPull(quiet){
     save(false);render();
     syncMsg(`Načteno ${d.books.length} knih · ${new Date().toLocaleTimeString('cs-CZ')}`);
     if(!quiet)toast('Načteno ze sheetu ✦');
-  }catch(e){syncMsg('Nepodařilo se načíst: '+e.message,1);if(!quiet)toast('Chyba při načítání');}
+  }catch(e){syncMsg('Nepodařilo se načíst: '+e.message+' — zkontroluj, že u nasazení je „Kdo má přístup: Kdokoli".',1);if(!quiet)toast('Chyba při načítání');}
 }
 async function sheetPush(quiet){
   const p=urlProblem(db.settings.sheetUrl);
@@ -1813,7 +1828,29 @@ function lookupUrl(q){
   const t=q.trim();
   const isbn=t.replace(/[-\s]/g,'');
   const query=/^\d{10}(\d{3})?$/.test(isbn)?'isbn:'+isbn:t;
-  return 'https://www.googleapis.com/books/v1/volumes?maxResults=6&q='+encodeURIComponent(query);
+  const key=(db.settings.gbKey||'').trim();
+  return 'https://www.googleapis.com/books/v1/volumes?maxResults=6&country=CZ'
+    +(key?'&key='+encodeURIComponent(key):'')+'&q='+encodeURIComponent(query);
+}
+/* Záložní zdroj: Open Library */
+function olUrl(q){
+  const t=q.trim(), isbn=t.replace(/[-\s]/g,'');
+  const base='https://openlibrary.org/search.json?limit=8&fields=title,subtitle,author_name,first_publish_year,number_of_pages_median,publisher,cover_i,language,first_sentence';
+  return base+(/^\d{10}(\d{3})?$/.test(isbn)?'&isbn='+isbn:'&q='+encodeURIComponent(t));
+}
+function mapOL(doc){
+  if(!doc||!doc.title)return null;
+  const lg=(doc.language||[])[0];
+  return {
+    title:doc.subtitle?`${doc.title}: ${doc.subtitle}`:doc.title,
+    author:(doc.author_name||[]).join(', '),
+    publisher:(doc.publisher||[])[0]||'',
+    year:+doc.first_publish_year||0,
+    pages:+doc.number_of_pages_median||0,
+    lang:lg==='cze'?'Čeština':lg==='eng'?'Angličtina':lg?'Jiný':'',
+    cover:doc.cover_i?`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`:'',
+    summary:(doc.first_sentence||[])[0]||'',categories:[]
+  };
 }
 let lkHits=[];
 async function lookup(){
@@ -1822,19 +1859,54 @@ async function lookup(){
   if(q.length<2){res.innerHTML='<div class="lkmsg">Napiš aspoň dvě písmena.</div>';return;}
   btn.disabled=true;btn.textContent='…';
   res.innerHTML='<div class="lkmsg">Hledám…</div>';
+  let src='', note='';
   try{
-    const r=await fetch(lookupUrl(q));
-    const d=await r.json();
-    lkHits=(d.items||[]).map(it=>mapVolume(it.volumeInfo)).filter(b=>b&&b.title);
-    if(!lkHits.length){res.innerHTML='<div class="lkmsg">Nic jsem nenašel. Zkus jiný název nebo vyplň knihu ručně.</div>';}
-    else res.innerHTML=lkHits.map((b,i)=>`<div class="lkitem" onclick="useHit(${i})">
+    lkHits=[];
+    // 1) přes vlastní Apps Script — běží na serveru, takže ho neblokuje CORS ani VPN
+    if(sheetOn()){
+      try{
+        const d=await jsonp(db.settings.sheetUrl+'?action=lookup&q='+encodeURIComponent(q),20000);
+        if(d&&d.error)note='Skript hlásí: '+d.error+' ';
+        else if(d&&d.results&&d.results.length){
+          lkHits=d.results;
+          src=lkHits[0].source||'tvůj skript';
+        }
+      }catch(e){note='Skript neodpověděl. ';}
+    }
+    // 2) přímo z prohlížeče (funguje, jen když nic neblokuje spojení)
+    if(!lkHits.length){
+      try{
+        const r=await fetch(olUrl(q));
+        const d=await r.json();
+        lkHits=(d.docs||[]).map(mapOL).filter(b=>b&&b.title);
+        if(lkHits.length)src='Open Library';
+      }catch(e){note+='Přímé spojení na Open Library neprošlo. ';}
+    }
+    if(!lkHits.length&&(db.settings.gbKey||'').trim()){
+      try{
+        const d=await jsonp(lookupUrl(q),15000);
+        if(d&&d.items){lkHits=d.items.map(it=>mapVolume(it.volumeInfo)).filter(b=>b&&b.title);if(lkHits.length)src='Google Books';}
+        else if(d&&d.error)note+=`Google Books: ${d.error.message||d.error.code} `;
+      }catch(e){}
+    }
+
+    if(!lkHits.length){
+      const blocked=/neodpověděl|neodpověděla|neprošlo/.test(note);
+      res.innerHTML=blocked
+        ? `<div class="lkmsg" style="color:#c0392b">${esc(note)}<br>
+             ${sheetOn()
+               ? 'Tvůj skript se neozval. Zkontroluj, že máš v Apps Scriptu <b>novou verzi</b> a znovu jsi ji nasadila:<br>Nasadit → Spravovat nasazení → ✏️ → Verze: <b>Nová verze</b> → Nasadit.'
+               : '<b>Nastav si Google Sheet</b> v ⚙️ Nastavení — vyhledávání pak poběží přes tvůj skript na serveru Googlu, kde ho nic neblokuje.'}<br>
+             Knihu zatím klidně vyplň ručně níž.</div>`
+        : `<div class="lkmsg"${note?' style="color:#c0392b"':''}>${note?esc(note)+'<br>':''}Nic jsem nenašel. Zkus jiný název, jen příjmení autora, nebo vyplň knihu ručně.</div>`;
+    } else res.innerHTML=lkHits.map((b,i)=>`<div class="lkitem" onclick="useHit(${i})">
       ${b.cover?`<img src="${esc(b.cover)}" loading="lazy" onerror="this.style.display='none'">`:'<div class="ph2"></div>'}
       <div style="flex:1;min-width:0">
         <h5>${esc(b.title)}</h5>
         <p>${esc(b.author||'neznámý autor')}${b.year?` · ${b.year}`:''}${b.publisher?` · ${esc(b.publisher)}`:''}${b.pages?` · ${b.pages} s.`:''}</p>
-      </div></div>`).join('')+'<div class="lkmsg">Klikni na knihu a vyplní se formulář. Zdroj: Google Books.</div>';
+      </div></div>`).join('')+`<div class="lkmsg">Klikni na knihu a vyplní se formulář. Zdroj: ${esc(src||'?')}.</div>`;
   }catch(e){
-    res.innerHTML='<div class="lkmsg" style="color:#c0392b">Vyhledávání se nepodařilo — zkontroluj připojení k internetu.</div>';
+    res.innerHTML='<div class="lkmsg" style="color:#c0392b">Vyhledávání se nepodařilo: '+esc(e.message)+'</div>';
   }
   btn.disabled=false;btn.textContent='Vyhledat';
 }
@@ -1846,6 +1918,44 @@ function useHit(i){
   if(b.lang)document.getElementById('i_lang').value=b.lang;
   checkDupe();onSeries();
   document.getElementById('lkres').innerHTML='<div class="lkmsg">✓ Vyplněno. Zkontroluj údaje a doplň žánr, stav a hodnocení.</div>';
+}
+
+/* ===== diagnostika ===== */
+async function diag(){
+  const out=document.getElementById('diagOut');
+  const L=[];
+  const say=x=>{L.push(x);out.textContent=L.join('\n');};
+  say('Adresa: '+location.protocol+'//'+(location.host||'(místní soubor)'));
+  say('Online: '+(navigator.onLine?'ano':'ne'));
+  say('Prohlížeč: '+navigator.userAgent.slice(0,90));
+  say('');
+
+  say('1) Open Library (hlavní zdroj)…');
+  try{const r=await fetch('https://openlibrary.org/search.json?q=test&limit=1');
+    const d=await r.json(); say('   ✓ funguje, nalezeno '+(d.numFound!=null?d.numFound:'?'));
+  }catch(e){say('   ✗ '+e.message);}
+
+  say('2) Google Books '+((db.settings.gbKey||'').trim()?'(s tvým klíčem)':'(bez klíče — kvóta je 0, čekej chybu)')+'…');
+  try{const d=await jsonp(lookupUrl('test'),12000);
+    say(d&&d.error?('   ✗ '+(d.error.message||d.error.code)):('   ✓ funguje, nalezeno '+(d.totalItems!=null?d.totalItems:'?')));
+  }catch(e){say('   ✗ '+e.message);}
+
+  say('3) Vyhledávání knih přes tvůj skript…');
+  if(!sheetOn())say('   – nenastaveno (nastav Google Sheet, vyhledávání pak půjde přes něj)');
+  else{try{const d=await jsonp(db.settings.sheetUrl+'?action=lookup&q=harry+potter',20000);
+    if(d&&d.error)say('   ✗ '+d.error);
+    else say('   ✓ funguje, nalezeno '+((d.results||[]).length)+((d.results||[])[0]?' (zdroj: '+d.results[0].source+')':''));
+  }catch(e){say('   ✗ '+e.message);}}
+
+  say('4) Google Sheet…');
+  if(!db.settings.sheetUrl)say('   – nenastaveno');
+  else{try{const d=await jsonp(db.settings.sheetUrl,12000);
+    say(d&&d.error?('   ✗ '+d.error):('   ✓ funguje, knih v sheetu: '+((d.books||[]).length)));
+  }catch(e){say('   ✗ '+e.message);}}
+
+  say('');
+  if(L.filter(x=>/✗/.test(x)).length>=2)
+    say('▸ Selhalo víc nezávislých adres — skoro jistě to blokuje VPN,\n  blokovač reklam nebo firemní síť. Zkus je vypnout a spustit test znovu.');
 }
 
 /* ===== stránkování ===== */
