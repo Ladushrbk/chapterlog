@@ -1867,6 +1867,8 @@ async function lookup(){
       try{
         const d=await jsonp(db.settings.sheetUrl+'?action=lookup&q='+encodeURIComponent(q),20000);
         if(d&&d.error)note='Skript hlásí: '+d.error+' ';
+        else if(d&&!d.results&&d.books)note='STARÝ_SKRIPT';
+        else if(d&&(d.version||0)<NEED_VERSION)note='STARÝ_SKRIPT';
         else if(d&&d.results&&d.results.length){
           lkHits=d.results;
           src=lkHits[0].source||'tvůj skript';
@@ -1891,7 +1893,17 @@ async function lookup(){
     }
 
     if(!lkHits.length){
-      const blocked=/neodpověděl|neodpověděla|neprošlo/.test(note);
+      const oldScript=/STARÝ_SKRIPT/.test(note);
+      const blocked=!oldScript&&/neodpověděl|neodpověděla|neprošlo/.test(note);
+      if(oldScript){
+        res.innerHTML=`<div class="lkmsg" style="color:#c0392b">
+          <b>Ve tvém Apps Scriptu běží stará verze.</b> Vyhledávání knih ještě neumí.<br><br>
+          1. Otevři sheet → <b>Rozšíření → Apps Script</b><br>
+          2. Smaž všechno a vlož obsah nového <code>AppsScript.gs</code>, ulož 💾<br>
+          3. <b>Nasadit → Spravovat nasazení → ✏️ → Verze: Nová verze → Nasadit</b><br><br>
+          Ten třetí krok je ten, na kterém to obvykle vázne — bez něj Google pořád spouští starý kód.</div>`;
+        btn.disabled=false;btn.textContent='Vyhledat';return;
+      }
       res.innerHTML=blocked
         ? `<div class="lkmsg" style="color:#c0392b">${esc(note)}<br>
              ${sheetOn()
@@ -1920,6 +1932,7 @@ function useHit(i){
   document.getElementById('lkres').innerHTML='<div class="lkmsg">✓ Vyplněno. Zkontroluj údaje a doplň žánr, stav a hodnocení.</div>';
 }
 
+const NEED_VERSION=3;   // jakou verzi Apps Scriptu tahle appka potřebuje
 /* ===== diagnostika ===== */
 async function diag(){
   const out=document.getElementById('diagOut');
@@ -1943,8 +1956,10 @@ async function diag(){
   say('3) Vyhledávání knih přes tvůj skript…');
   if(!sheetOn())say('   – nenastaveno (nastav Google Sheet, vyhledávání pak půjde přes něj)');
   else{try{const d=await jsonp(db.settings.sheetUrl+'?action=lookup&q=harry+potter',20000);
+    const v=(d&&d.version)||0;
     if(d&&d.error)say('   ✗ '+d.error);
-    else say('   ✓ funguje, nalezeno '+((d.results||[]).length)+((d.results||[])[0]?' (zdroj: '+d.results[0].source+')':''));
+    else if(v<NEED_VERSION)say('   ✗ SKRIPT JE STARÝ (verze '+(v||'neznámá')+', potřebuju '+NEED_VERSION+')\n     → Apps Script: vlož nový kód a dej Nasadit → Spravovat nasazení → ✏️ → Nová verze');
+    else say('   ✓ funguje (skript v'+v+'), nalezeno '+((d.results||[]).length)+((d.results||[])[0]?' — zdroj: '+d.results[0].source:''));
   }catch(e){say('   ✗ '+e.message);}}
 
   say('4) Google Sheet…');
