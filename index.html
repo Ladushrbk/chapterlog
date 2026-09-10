@@ -356,6 +356,29 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
 .gate-msg.good{background:var(--glow);color:var(--accent)}
 .gate-foot{text-align:center;margin-top:18px;font-size:12px;color:var(--muted)}
 
+/* ---------- uvítání ---------- */
+.intro{position:fixed;inset:0;z-index:190;background:var(--bg);display:none;overflow-y:auto;padding:0 0 40px}
+.intro.on{display:block}
+.intro-hero{background:linear-gradient(135deg,var(--bg2),var(--bg));border-bottom:1px solid var(--line);padding:52px 22px 44px;text-align:center;position:relative;overflow:hidden}
+.intro-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 300px at 50% -30%,var(--glow),transparent 70%);pointer-events:none}
+.intro-hero .brand{font-size:42px;justify-content:center;margin-bottom:8px;position:relative;z-index:1}
+.intro-hero p{color:var(--muted);font-size:15.5px;max-width:520px;margin:0 auto;position:relative;z-index:1;line-height:1.6}
+.intro-in{max-width:1080px;margin:0 auto;padding:34px 22px 0}
+.intro-in h3{font-family:var(--serif);font-size:21px;margin:34px 0 14px;letter-spacing:-.2px}
+.intro-in h3:first-child{margin-top:0}
+.igrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:13px}
+.icard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:17px 18px;box-shadow:var(--shadow)}
+.icard .em{font-size:24px;line-height:1;margin-bottom:9px;display:block}
+.icard h4{font-size:14.5px;margin-bottom:5px;letter-spacing:-.1px}
+.icard p{font-size:13px;color:var(--muted);line-height:1.55}
+.intro-go{text-align:center;margin-top:42px;padding-top:30px;border-top:1px solid var(--line)}
+.intro-x{position:fixed;top:16px;right:18px;z-index:2;width:38px;height:38px;border-radius:50%;
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);
+  font-size:16px;color:var(--muted);line-height:1;transition:.16s}
+.intro-x:hover{color:var(--ink);background:var(--bg2)}
+.intro-go .btn{padding:13px 34px;font-size:15px}
+.intro-skip{display:block;margin:12px auto 0;color:var(--muted);font-size:12.5px;text-decoration:underline;text-underline-offset:2px}
+
 /* ---------- stav synchronizace ---------- */
 .cloudpill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:99px;background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:var(--muted);box-shadow:var(--shadow);white-space:nowrap}
 .cloudpill b{font-weight:600;color:var(--ink)}
@@ -399,6 +422,119 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
     <div class="gate-foot">
       <button onclick="authGuest()" style="color:var(--muted);text-decoration:underline;text-underline-offset:2px;font-size:12px">Prohlédnout si to bez účtu</button>
       <div style="margin-top:8px;font-size:11.5px;opacity:.8">Bez účtu zůstanou data jen v tomhle prohlížeči.</div>
+    </div>
+  </div>
+</div>
+
+<!-- UVÍTÁNÍ -->
+<div class="intro" id="intro">
+  <button class="intro-x" onclick="closeIntro()" title="Zavřít" aria-label="Zavřít">✕</button>
+  <div class="intro-hero">
+    <div class="brand">Chapter<em>Log</em></div>
+    <p id="introLead">Čtenářský deník, který si pamatuje víc než jen kolik knih jsi přečetla.
+       Tady je všechno, co umí — ať ti nic neuteče.</p>
+  </div>
+
+  <div class="intro-in">
+
+    <h3>📕 Každá kniha má svoje místo</h3>
+    <div class="igrid">
+      <div class="icard"><span class="em">🔎</span><h4>Nemusíš nic vypisovat</h4>
+        <p>Zadej název, autora nebo ISBN a kniha se najde sama. Doplní se název, autor,
+           nakladatelství, rok vydání, počet stran, obálka i anotace. Když ji nenajdeš,
+           vyplníš ji ručně — funguje to úplně stejně.</p></div>
+      <div class="icard"><span class="em">🖼</span><h4>Vlastní obálka</h4>
+        <p>Nelíbí se ti nalezená obálka, nebo máš vzácné vydání? Do pole
+           <b>Odkaz na obálku</b> vlož adresu jakéhokoli obrázku z webu a použije se ta.
+           Bez obálky dostane kniha barvu podle svého žánru.</p></div>
+      <div class="icard"><span class="em">🔁</span><h4>Hlídá duplicity</h4>
+        <p>Když začneš psát knihu, kterou už v knihovně máš, upozorní tě na to dřív,
+           než ji uložíš podruhé.</p></div>
+      <div class="icard"><span class="em">📚</span><h4>Čtyři stavy</h4>
+        <p>Wishlist → K přečtení → Čtu → Přečteno. Kniha si mezi nimi putuje jedním klikem
+           a každý stav má svoji vlastní obrazovku.</p></div>
+      <div class="icard"><span class="em">📗</span><h4>Odkud ji máš</h4>
+        <p>Fyzická kniha, e-book, z knihovny, audiokniha. Audioknihy se počítají
+           v minutách místo stran, takže ti statistiky nerozhodí.</p></div>
+      <div class="icard"><span class="em">📖</span><h4>Série a díly</h4>
+        <p>Zapiš sérii a číslo dílu. Na obrazovce Série pak vidíš, které díly máš
+           a který ti chybí, aby ses neptala v knihkupectví podruhé na to samé.</p></div>
+    </div>
+
+    <h3>💜 Tvoje poznámky, ne cizí recenze</h3>
+    <div class="igrid">
+      <div class="icard"><span class="em">⭐</span><h4>Hodnocení i spice</h4>
+        <p>Hvězdičky za to, jak se ti kniha líbila, a chilli za to, jak byla pálivá.
+           Obojí se propisuje do žebříčků a statistik.</p></div>
+      <div class="icard"><span class="em">✍️</span><h4>Recenze, citace, poznámky</h4>
+        <p>Ke každé knize si píšeš vlastní recenzi, ukládáš oblíbenou citaci a přidáváš
+           poznámky typu „vrátit do knihovny" nebo „koupit pokračování".</p></div>
+      <div class="icard"><span class="em">🏷</span><h4>Tropy a tagy</h4>
+        <p>Osmnáct tropů máš připravených — enemies to lovers, slow burn, found family,
+           morally grey, rozbrečelo mě… A vlastní si přidáš rovnou u knihy, stačí napsat
+           a dát +. Zůstanou ti pak v nabídce napořád.</p></div>
+      <div class="icard"><span class="em">🎨</span><h4>Vlastní žánry a barvy</h4>
+        <p>Žánry si přidáváš, mažeš a hlavně barvíš. Barva žánru se propíše do obálek
+           bez obrázku i do všech grafů, takže knihovna vypadá jako tvoje.</p></div>
+      <div class="icard"><span class="em">🧑</span><h4>Postavy</h4>
+        <p>Zapisuj postavy, které si chceš pamatovat. Appka je sbírá napříč knihami,
+           takže uvidíš, kde se kdo objevil.</p></div>
+      <div class="icard"><span class="em">💬</span><h4>Citace se ti připomínají</h4>
+        <p>Citace, které sis uložila, se střídají na úvodní obrazovce. Nenápadný způsob,
+           jak si vzpomenout na knihu, co tě dostala.</p></div>
+    </div>
+
+    <h3>📈 Čtení, které se počítá samo</h3>
+    <div class="igrid">
+      <div class="icard"><span class="em">📖</span><h4>Průběh čtení</h4>
+        <p>U rozečtené knihy posuneš aktuální stranu a hned vidíš, kolik procent máš za sebou.
+           Jedním tlačítkem knihu dočteš a doplní se datum.</p></div>
+      <div class="icard"><span class="em">⏱</span><h4>Zná tvoje tempo</h4>
+        <p>Z dočtených knih spočítá, kolik stran denně opravdu přečteš — a podle toho
+           odhadne, jak dlouho ti bude trvat hromádka „K přečtení" i celý wishlist.</p></div>
+      <div class="icard"><span class="em">🎲</span><h4>Ruleta</h4>
+        <p>Nemůžeš se rozhodnout? Vylosuje ti knihu z toho, co máš doma. Můžeš si vybrat
+           zdroj, žánr i jazyk a losovat znovu, dokud se ti něco nezalíbí.</p></div>
+      <div class="icard"><span class="em">🎯</span><h4>Cíl na rok</h4>
+        <p>Nastav si, kolik knih chceš za rok přečíst. Appka hlídá, jak jsi na tom,
+           a cíl si pamatuje pro každý rok zvlášť.</p></div>
+    </div>
+
+    <h3>📊 Přehledy, kvůli kterým to celé má smysl</h3>
+    <div class="igrid">
+      <div class="icard"><span class="em">🖼</span><h4>Galerie</h4>
+        <p>Celá knihovna v obálkách. Dá se filtrovat podle stavu i zdroje —
+           hezčí způsob, jak si projít, co jsi přečetla.</p></div>
+      <div class="icard"><span class="em">✍️</span><h4>Autoři</h4>
+        <p>Kdo se ti opakuje, kolik od koho máš a jak ho průměrně hodnotíš.
+           Občas překvapí, komu jsi vlastně věrná.</p></div>
+      <div class="icard"><span class="em">📚</span><h4>Tracker</h4>
+        <p>Všechny knihy v jedné tabulce. Řadíš kliknutím na sloupec, filtruješ,
+           stránkuješ. Když hledáš konkrétní údaj, tady ho najdeš nejrychleji.</p></div>
+      <div class="icard"><span class="em">💰</span><h4>Rozpočet</h4>
+        <p>Kolik jsi za knihy utratila — po měsících, žánrech i zdrojích. Průměr na knihu,
+           průměr za měsíc, nejdražší kousek. Dá se filtrovat po letech.</p></div>
+      <div class="icard"><span class="em">📈</span><h4>Statistiky</h4>
+        <p>Nejčastější žánry, tropy a nakladatelství, rozložení hodnocení, přečtené knihy
+           po měsících. Všechno se počítá samo z toho, co zapisuješ.</p></div>
+    </div>
+
+    <h3>⚙️ A ještě pár věcí</h3>
+    <div class="igrid">
+      <div class="icard"><span class="em">🎨</span><h4>Sedm motivů</h4>
+        <p>Fialová, hnědá, rose gold, šalvěj, blush a dvě tmavé — půlnoc a dark academia.
+           Přepínáš je v Nastavení a hned to vidíš.</p></div>
+      <div class="icard"><span class="em">☁️</span><h4>Máš to všude</h4>
+        <p>Knihovna se ukládá sama a je na všech tvých zařízeních. Funguje i offline —
+           co zapíšeš bez signálu, se odešle, jakmile se připojíš.</p></div>
+      <div class="icard"><span class="em">💾</span><h4>Data jsou tvoje</h4>
+        <p>Jedním tlačítkem si stáhneš celou knihovnu jako soubor a stejně tak ji můžeš
+           obnovit. Účet se dá kdykoli smazat i s daty, bez psaní komukoli.</p></div>
+    </div>
+
+    <div class="intro-go">
+      <button class="btn primary" onclick="closeIntro()">Jdeme na to ✦</button>
+      <button class="intro-skip" onclick="closeIntro()">Tohle najdeš kdykoli v Nastavení</button>
     </div>
   </div>
 </div>
@@ -786,7 +922,7 @@ let formRating=0, formSpice=0, formGenres=[], formTags=[], formChars=[];
 
 /* ---------- storage ---------- */
 const clone=o=>JSON.parse(JSON.stringify(o));
-const DEFAULT_SETTINGS={name:'',currency:'Kč',theme:'purple',goals:{},savedAt:''};
+const DEFAULT_SETTINGS={name:'',currency:'Kč',theme:'purple',goals:{},savedAt:'',introSeen:false};
 function blankDb(){
   return {settings:clone(DEFAULT_SETTINGS),genres:Object.keys(GENRE_COLOR),
           tags:DEFAULT_TAGS.slice(),genreColors:{},books:[]};
@@ -1411,12 +1547,14 @@ function renderTBR(){
   const byS={};SOURCES.forEach(s=>byS[s]=list.filter(b=>b.source===s));
   const pages=list.filter(b=>!isAudio(b)).reduce((s,b)=>s+(+b.pages||0),0);
   const mins=list.filter(isAudio).reduce((s,b)=>s+(+b.pages||0),0);
+  const pc=pace();
   document.getElementById('tbrStats').innerHTML=[
-    [list.length,'čeká na přečtení'],
-    [byS['Z knihovny'].length,'z knihovny'],
-    [pages.toLocaleString('cs-CZ'),'stran před tebou'],
-    [Math.round(mins/60)+' h','audia před tebou']
-  ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    [list.length,'čeká na přečtení',''],
+    [byS['Z knihovny'].length,'z knihovny',''],
+    [pages.toLocaleString('cs-CZ'),'stran před tebou',''],
+    [Math.round(mins/60)+' h','audia před tebou',''],
+    readEstimate(pages,pc)
+  ].map(([n,l,t])=>`<div class="stat"${t?` title="${esc(t)}"`:''}><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 
   document.getElementById('tbrChips').innerHTML=[['all','Vše']].concat(SOURCES.map(x=>[x,SRC_ICON[x]+' '+x]))
     .map(([k,l])=>`<button class="chip ${tbrSource===k?'on':''}" onclick="tbrSource='${k}';resetPage('tbr');renderTBR()">${l}${k!=='all'&&byS[k]?` <span style="opacity:.6">${byS[k].length}</span>`:''}</button>`).join('');
@@ -1482,17 +1620,48 @@ function startReading(id){
   save();go('library');toast('Hezké čtení ✦');
 }
 
+/* Kolik stran denně uživatel reálně přečte. Počítá se z dočtených knih,
+   které mají začátek i konec — audioknihy stranou, ty se měří v minutách.
+   Dokud takové knihy nejsou aspoň tři, držíme se odhadu 50 stran denně,
+   protože z jedné dvou knih by vyšla nesmyslná čísla. */
+function pace(){
+  const rows=db.books.filter(b=>b.status==='Přečteno'&&b.start&&b.finish&&!isAudio(b)&&+b.pages>0)
+    .map(b=>{
+      const dny=(new Date(b.finish)-new Date(b.start))/86400000;
+      return dny>=0&&dny<400?{stran:+b.pages,dny:Math.max(1,Math.round(dny))}:null;
+    }).filter(Boolean);
+  if(rows.length<3)
+    return {perDay:50,
+            title:'Až dočteš aspoň tři knihy se zadaným začátkem a koncem, spočítám ti skutečné tempo.'};
+  const stran=rows.reduce((s,r)=>s+r.stran,0), dny=rows.reduce((s,r)=>s+r.dny,0);
+  const perDay=Math.max(1,Math.round(stran/dny));
+  return {perDay,
+          title:`Tvoje tempo je ${perDay} stran denně — spočítáno z ${rows.length} dočtených knih.`};
+}
+/* Odhad, jak dlouho ti bude trvat to přečíst. U velkých hromádek přepneme
+   z dní na měsíce nebo roky — „847 dní" nikomu nic neřekne.
+   Vrací [číslo, popisek, vysvětlení do tooltipu]. */
+function readEstimate(pages,p){
+  const d=Math.round((+pages||0)/p.perDay);
+  const jak=p.perDay===50?'po 50 stranách':'tvým tempem';
+  if(d<100)   return [d||0, `dní čtení ${jak}`, p.title];
+  const m=Math.round(d/30.4);
+  if(m<24)    return [m, `měsíců čtení ${jak}`, p.title];
+  return [Math.round(m/12), `let čtení ${jak}`, p.title];
+}
+
 /* ===== WISHLIST ===== */
 function renderWishlist(){
   const w=db.books.filter(b=>b.status==='Wishlist');
   const pages=w.filter(b=>!isAudio(b)).reduce((s,b)=>s+(+b.pages||0),0);
   const mins=w.filter(isAudio).reduce((s,b)=>s+(+b.pages||0),0);
+  const pw2=pace();
   document.getElementById('wishStats').innerHTML=[
     [w.length,'knih ve wishlistu'],
     [pages.toLocaleString('cs-CZ'),'stran mě čeká'],
     [Math.round(mins/60)+' h','audia mě čeká'],
-    [Math.round(pages/50)||0,'dní čtení po 50 stranách']
-  ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    readEstimate(pages,pw2)
+  ].map(([n,l,t])=>`<div class="stat"${t?` title="${esc(t)}"`:''}><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
   w.sort((a,b)=>a.title.localeCompare(b.title,'cs'));
   const qw=(document.getElementById('qw').value||'').toLowerCase();
   const wf=qw?w.filter(b=>(b.title+' '+b.author+' '+(b.series||'')).toLowerCase().includes(qw)):w;
@@ -1966,6 +2135,7 @@ function authGuest(){
   gateClose();
   cloudStatus('local');
   render();
+  maybeIntro();
 }
 
 async function signOut(){
@@ -2026,6 +2196,7 @@ async function enterAccount(user){
   }
   render();
   if(cloud.status!=='bad')cloudStatus('ok');
+  maybeIntro();
 }
 
 /* Když se uživatel vrátí k záložce, mrkneme, jestli mezitím nepsal jinde. */
@@ -2257,16 +2428,37 @@ function open_(id){document.getElementById(id).classList.add('on');document.body
 function close_(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')['mBook','mDetail','mSub'].forEach(close_);});
 
+/* ===== uvítání =====
+   Ukáže se jednou po prvním přihlášení. Příznak žije v db.settings, takže
+   se sesynchronizuje — kdo si tour projde na mobilu, na notebooku ji už nedostane. */
+function openIntro(){
+  document.getElementById('intro').classList.add('on');
+  document.body.style.overflow='hidden';
+  window.scrollTo({top:0});
+}
+function closeIntro(){
+  document.getElementById('intro').classList.remove('on');
+  document.body.style.overflow='';
+  if(!db.settings.introSeen){db.settings.introSeen=true;save();}
+}
+function maybeIntro(){
+  if(document.getElementById('gate').classList.contains('on'))return;
+  if(db.settings.introSeen)return;
+  openIntro();
+}
+
 /* ===== panel účtu v nastavení ===== */
 function renderAccount(){
   const el=document.getElementById('accountBody');
   if(!el)return;
-  const demoBtn='<button class="btn sm" onclick="loadDemo()" style="margin-top:10px">✨ Načíst ukázkovou knihovnu</button>';
+  const extraBtns='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+    +'<button class="btn sm" onclick="openIntro()">✦ Co všechno appka umí</button>'
+    +'<button class="btn sm" onclick="loadDemo()">✨ Načíst ukázkovou knihovnu</button></div>';
 
   if(!sb){
     el.innerHTML=`<p style="font-size:13px;color:var(--muted)">
       Synchronizace není zapnutá — knihy se ukládají jen do tohohle prohlížeče.
-      Zálohu si stáhni tlačítkem <b>⬇ Záloha</b>.</p>${demoBtn}`;
+      Zálohu si stáhni tlačítkem <b>⬇ Záloha</b>.</p>${extraBtns}`;
     return;
   }
   if(!cloud.user){
@@ -2274,7 +2466,7 @@ function renderAccount(){
       Prohlížíš si to <b>bez účtu</b>. Data zůstávají jen tady a o wishlist přijdeš,
       až se vymaže cache prohlížeče.</p>
       <button class="btn sm primary" onclick="gateOpen();authMode('up')">Založit účet a synchronizovat</button>
-      ${demoBtn}`;
+      ${extraBtns}`;
     return;
   }
   el.innerHTML=`
@@ -2287,7 +2479,7 @@ function renderAccount(){
       <button class="btn sm" onclick="changePassword()">🔑 Změnit heslo</button>
       <button class="btn sm" onclick="signOut()">Odhlásit se</button>
     </div>
-    ${demoBtn}
+    ${extraBtns}
     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
     <button class="btn sm danger" onclick="deleteAccount()">🗑 Smazat účet a všechna data</button>`;
 }
@@ -2304,13 +2496,13 @@ async function boot(){
   load();
   render();
 
-  if(!sb){cloudStatus('off');return;}
+  if(!sb){cloudStatus('off');maybeIntro();return;}
 
   let session=null;
   try{const {data}=await sb.auth.getSession();session=data&&data.session;}catch(e){}
 
   if(session&&session.user)      await enterAccount(session.user);
-  else if(cloud.guest)           cloudStatus('local');
+  else if(cloud.guest)          {cloudStatus('local');maybeIntro();}
   else                          {authMode('in');gateOpen();}
 
   /* Callback nesmí čekat na další volání Supabase — proto setTimeout. */
