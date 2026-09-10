@@ -726,7 +726,12 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
 const SUPABASE_URL      = 'https://dxhynyicmychcwlmjcbp.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_cEnS4txaQlqbGLoma5Sm-A_Abi_6scT';
 /* ========================================================================== */
-
+/* Přihlášení přes Google. Nech false, dokud v Supabase v Authentication →
+   Sign In / Providers → Google nevyplníš Client ID a Secret z Google Cloud.
+   Při false se tlačítko na přihlašovací obrazovce vůbec nezobrazí — je to
+   lepší než ho ukazovat a poslat člověka na chybovou hlášku.               */
+const GOOGLE_LOGIN = false;
+/* ========================================================================== */
 const LEGACY_KEY='chapterlog_v2';
 const GUEST_KEY='chapterlog_guest';
 let KEY=LEGACY_KEY;
