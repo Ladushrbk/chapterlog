@@ -326,6 +326,9 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
   .detail .dcover{flex:0 0 122px}
 }
 
+/* hidden musí přebít display:flex níž, jinak by skrývání nefungovalo */
+[hidden]{display:none!important}
+
 /* ---------- přihlašovací obrazovka ---------- */
 .gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,var(--bg2),var(--bg));display:none;align-items:center;justify-content:center;padding:22px;overflow-y:auto}
 .gate.on{display:flex}
@@ -381,7 +384,7 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
       Pokračovat přes Google
     </button>
 
-    <div class="gate-or">nebo e-mailem</div>
+    <div class="gate-or" id="gateOr">nebo e-mailem</div>
 
     <div class="f"><label>E-mail</label><input id="gateEmail" type="email" autocomplete="email" placeholder="tvuj@email.cz" onkeydown="if(event.key==='Enter')authSubmit()"></div>
     <div class="f" id="gatePassWrap"><label>Heslo</label><input id="gatePass" type="password" autocomplete="current-password" placeholder="aspoň 8 znaků" onkeydown="if(event.key==='Enter')authSubmit()"></div>
@@ -725,13 +728,14 @@ blockquote{border-left:3px solid var(--accent2);padding-left:13px;font-family:va
    ========================================================================== */
 const SUPABASE_URL      = 'https://dxhynyicmychcwlmjcbp.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_cEnS4txaQlqbGLoma5Sm-A_Abi_6scT';
-/* ========================================================================== */
+
 /* Přihlášení přes Google. Nech false, dokud v Supabase v Authentication →
    Sign In / Providers → Google nevyplníš Client ID a Secret z Google Cloud.
    Při false se tlačítko na přihlašovací obrazovce vůbec nezobrazí — je to
    lepší než ho ukazovat a poslat člověka na chybovou hlášku.               */
 const GOOGLE_LOGIN = false;
 /* ========================================================================== */
+
 const LEGACY_KEY='chapterlog_v2';
 const GUEST_KEY='chapterlog_guest';
 let KEY=LEGACY_KEY;
@@ -1934,6 +1938,7 @@ async function authSubmit(){
 
 async function authGoogle(){
   if(authState.busy)return;
+  if(!GOOGLE_LOGIN)return gateMsg('Přihlášení přes Google zatím není nastavené. Použij e-mail a heslo.');
   authBusy(true);gateClear();
   const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:appUrl()}});
   if(error){gateMsg(authError(error));authBusy(false);}
@@ -1951,6 +1956,7 @@ function authError(e){
   if(m.includes('rate limit')||m.includes('too many'))return 'Moc pokusů po sobě. Zkus to za chvilku.';
   if(m.includes('password'))return 'Heslo musí mít aspoň 8 znaků.';
   if(m.includes('failed to fetch'))return 'Nepodařilo se spojit se serverem. Zkontroluj připojení.';
+  if(m.includes('provider is not enabled'))return 'Tenhle způsob přihlášení zatím není v Supabase zapnutý.';
   return e&&e.message?e.message:'Něco se nepovedlo, zkus to prosím znovu.';
 }
 
@@ -2289,6 +2295,10 @@ function renderAccount(){
 /* ===== start ===== */
 async function boot(){
   buildNav();
+  if(!GOOGLE_LOGIN){
+    document.getElementById('gateGoogle').hidden=true;
+    document.getElementById('gateOr').hidden=true;
+  }
   try{if(localStorage.getItem(GUEST_KEY))cloud.guest=true;}catch(e){}
 
   load();
