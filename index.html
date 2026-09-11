@@ -882,7 +882,7 @@ let sb=null;
 if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase){
   try{
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,
-      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});
+      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});
   }catch(e){console.warn('Supabase se nepodařilo nastartovat:',e);}
 }
 const cloudOn=()=>!!(sb&&cloud.user);
@@ -2116,11 +2116,44 @@ async function authGoogle(){
 /* Adresa, na kterou se má uživatel vrátit — bez hashů a dotazů z minulého kola. */
 function appUrl(){return location.origin+location.pathname;}
 
+/* Přečte chybu, kterou Supabase vrátil v adrese po kliknutí na odkaz z e-mailu,
+   a rovnou adresu uklidí, ať se hláška neopakuje po refreshi. */
+function urlAuthError(){
+  const q=new URLSearchParams(location.search);
+  const f=new URLSearchParams(location.hash.replace(/^#/,''));
+  const code=f.get('error_code')||q.get('error_code')||'';
+  const err =f.get('error')     ||q.get('error')     ||'';
+  const desc=f.get('error_description')||q.get('error_description')||'';
+  if(!code&&!err)return '';
+  history.replaceState(null,'',appUrl());
+  if(/expired|invalid/i.test(code+' '+desc))
+    return 'Potvrzovací odkaz už není platný — platí jen omezenou dobu a jde použít jen jednou. '
+          +'Zadej e-mail níž a pošleme ti nový.';
+  if(/access_denied/i.test(err+code))
+    return 'Odkaz se nepodařilo ověřit. Zadej e-mail níž a pošleme ti nový.';
+  return 'Přihlášení z odkazu se nepovedlo'+(desc?': '+decodeURIComponent(desc.replace(/\+/g,' ')):'.')
+        +' Zkus to prosím znovu.';
+}
+
+/* Poslat potvrzovací e-mail znovu. */
+async function authResend(){
+  const email=document.getElementById('gateEmail').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return gateMsg('Nejdřív vyplň e-mail, na který ho máme poslat.');
+  authBusy(true);
+  try{
+    const {error}=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:appUrl()}});
+    if(error)throw error;
+    gateMsg('Poslali jsme ti nový potvrzovací e-mail. Otevři ho na tomhle zařízení a mrkni i do spamu.','good');
+  }catch(e){gateMsg(authError(e));}
+  authBusy(false);
+}
+
 /* Hlášky ze Supabase jsou anglicky, tyhle nejčastější přeložíme. */
 function authError(e){
   const m=(e&&e.message||'').toLowerCase();
   if(m.includes('invalid login'))return 'Špatný e-mail nebo heslo.';
-  if(m.includes('email not confirmed'))return 'E-mail ještě není potvrzený — mrkni do schránky.';
+  if(m.includes('email not confirmed'))return 'E-mail ještě není potvrzený — mrkni do schránky. '
+    +'<button onclick="authResend()" style="color:inherit;text-decoration:underline;text-underline-offset:2px">Poslat potvrzení znovu</button>';
   if(m.includes('already registered')||m.includes('already exists'))return 'Na tenhle e-mail už účet existuje. Zkus se přihlásit.';
   if(m.includes('rate limit')||m.includes('too many'))return 'Moc pokusů po sobě. Zkus to za chvilku.';
   if(m.includes('password'))return 'Heslo musí mít aspoň 8 znaků.';
@@ -2501,7 +2534,9 @@ async function boot(){
   let session=null;
   try{const {data}=await sb.auth.getSession();session=data&&data.session;}catch(e){}
 
+  const urlErr=urlAuthError();
   if(session&&session.user)      await enterAccount(session.user);
+  else if(urlErr)               {authMode('in');gateOpen();gateMsg(urlErr);}
   else if(cloud.guest)          {cloudStatus('local');maybeIntro();}
   else                          {authMode('in');gateOpen();}
 
